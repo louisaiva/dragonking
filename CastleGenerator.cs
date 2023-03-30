@@ -18,7 +18,6 @@ public class CastleGenerator : MonoBehaviour
         }
     }
 
-
     public void GenerateCastle(int x, int z)
     {
         string castleName = "castle " + (castles.Count +1).ToString();

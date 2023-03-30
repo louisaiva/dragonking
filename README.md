@@ -9,5 +9,3 @@ It composes for now :
 
     - dragonking : the "castle" game
     - dragonfief : the rpg kinda game.
-
-test 3

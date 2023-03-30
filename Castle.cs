@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Castle : MonoBehaviour, I_HasUI
+public class Castle : MonoBehaviour, I_HasUI, I_Hooverable
 {
 
     // castle
@@ -15,6 +15,13 @@ public class Castle : MonoBehaviour, I_HasUI
 
     [ReadOnly,SerializeField] private int maxLife;
     [ReadOnly,SerializeField] private int currentLife;
+
+
+    // ui
+
+    public GameObject ui { get; set; }
+
+    // init
 
     public void init(string name,Color color)
     {
@@ -30,6 +37,10 @@ public class Castle : MonoBehaviour, I_HasUI
             {
                 child.GetComponent<Renderer>().material.SetColor("_EmissionColor",color*deltaColorEmission);
             }
+            else if (child.name == "ground")
+            {
+                child.gameObject.SetActive(false);
+            }
         }
 
         // life
@@ -40,9 +51,21 @@ public class Castle : MonoBehaviour, I_HasUI
         InitUI();
     }
 
-    // ui
+    public void Update()
+    {
+        //UpdateUI();
 
-    public GameObject ui { get; set; }
+        HandleInteraction();
+    }
+
+    // interaction
+
+    public void HandleInteraction()
+    {
+        // do niothin
+    }
+
+    // ui
 
     public void ShowUI()
     {
@@ -97,5 +120,15 @@ public class Castle : MonoBehaviour, I_HasUI
     public int GetCurrentLife()
     {
         return currentLife;
+    }
+
+    // hoover
+
+    public void OnHooverEnter()
+    {
+    }
+
+    public void OnHooverExit()
+    {
     }
 }
