@@ -33,14 +33,6 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable
         foreach (Transform child in transform)
         {
             child.GetComponent<Renderer>().material.color = color;
-            if (child.name != "walls")
-            {
-                child.GetComponent<Renderer>().material.SetColor("_EmissionColor",color*deltaColorEmission);
-            }
-            else if (child.name == "ground")
-            {
-                child.gameObject.SetActive(false);
-            }
         }
 
         // life

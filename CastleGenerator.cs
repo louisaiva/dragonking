@@ -32,8 +32,7 @@ public class CastleGenerator : MonoBehaviour
         Material matWall = Resources.Load("Materials/castles/walls_1", typeof(Material)) as Material;
         
         // apply materials
-        castle.transform.Find("donjon").GetComponent<Renderer>().material = mat1;
-        castle.transform.Find("ground").GetComponent<Renderer>().material = mat1;
+        castle.transform.Find("donjon").GetComponent<Renderer>().material = matWall;
         castle.transform.Find("walls").GetComponent<Renderer>().material = matWall;
 
         // create mesh collider

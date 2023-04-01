@@ -4,54 +4,78 @@ using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
 {
-    [SerializeField] private float speed = 10f;
+
+    [SerializeField] private GameObject inputHandler;
+
+    [SerializeField] private float speed = 40f;
     [SerializeField] private float zoomSpeed = 5f;
+    [SerializeField] private float ratioSpdZoom = 5f;
+    [SerializeField] private float ratioEnhancer = 0.04f;
+
+    [ReadOnly, SerializeField] private Vector3 destination;
 
     // Update is called once per frame
     public void Update()
     {
-        
+
+        // move to destination
+        if (destination.y > 0 && transform.position != destination)
+        {
+            transform.position = Vector3.Lerp(transform.position, destination, speed * Time.deltaTime);
+
+            if (Vector3.Distance(transform.position, destination) < 0.05f)
+            {
+                resetDestination();
+            }
+        }
+
+        // move with keyboard
         HandleMovement();
 
         // zoom with mouse wheel
-        float zoom = Input.GetAxis("Mouse ScrollWheel");
+        float zoom = inputHandler.GetComponent<InputHandler>().zoomInput();
         if (zoom != 0)
         {
-            HandleZoom(zoom);
+            HandleZoomPerspective(zoom);
         }
-        
+
     }
+    
+
+    // handling things
 
     public void HandleMovement()
     {
-        Vector3 movement = new Vector3(0,0,0);
+        Vector2 moveInput = inputHandler.GetComponent<InputHandler>().moveInput();
 
-        // move camera with zqsd
-        if (Input.GetKey(KeyCode.Z))
-        {
-            movement.z += 1;
-        }
-        if (Input.GetKey(KeyCode.S))
-        {
-            movement.z -= 1;
-        }
-        if (Input.GetKey(KeyCode.Q))
-        {
-            movement.x -= 1;
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            movement.x += 1;
-        }
+        Vector3 movement = new Vector3(moveInput.x,0,moveInput.y);
 
-        //Debug.Log(movement);
-        if (movement != new Vector3(0, 0, 0)){
+        if (movement != new Vector3(0f, 0f, 0f)){
             movement.Normalize();
+
+            int maxSpeed = 150;
+
+            float fov = transform.GetComponent<Camera>().fieldOfView;
+            float ratio = ratioSpdZoom-fov*ratioEnhancer;
+
+            if (ratio < 0.5f)
+                ratio = 0.5f;
+
+            float speed = fov / ratio;
+
+            if (speed > maxSpeed)
+                speed = maxSpeed;
+
+            Debug.Log(speed);
+
             transform.position = Vector3.Lerp(transform.position, transform.position+movement, speed * Time.deltaTime);
+
+            // delete the destination
+            resetDestination();
         }
     }
 
-    public void HandleZoom(float zoom)
+    public void HandleZoomOrtho(float zoom)
     {   
         //Debug.Log(zoom);
 
@@ -74,6 +98,50 @@ public class CameraMovement : MonoBehaviour
 
         }
 
+    }
+
+    public void HandleZoomPerspective(float zoom)
+    {
+        float finalZoom = transform.GetComponent<Camera>().fieldOfView;
+        float ratio = Mathf.Sign(zoom) * zoomSpeed * -1;
+        finalZoom += ratio;
+
+        if (finalZoom <= 10)
+        {
+            finalZoom = 10;
+        }
+        else if (finalZoom >= 100)
+        {
+            finalZoom = 100;
+        }
+
+        if (finalZoom != transform.GetComponent<Camera>().fieldOfView)
+        {
+            transform.GetComponent<Camera>().fieldOfView = finalZoom;
+
+        }
+    }
+
+
+    // useful fonctions
+
+    public void RecenterAtPoint(Vector3 point)
+    {
+        // using Lerp
+        // we need to calculate the moving vector of the camera in order to replace the point at the center of the screen
+
+        RaycastHit centerOfScreen;
+        Ray ray = transform.GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
+        if (Physics.Raycast(ray, out centerOfScreen, Mathf.Infinity))
+        {
+            Vector3 difference_vector = centerOfScreen.point - transform.position;
+            destination = point - difference_vector;
+        }
+    }
+
+    private void resetDestination()
+    {
+        destination = new Vector3(0, -10000, 0);
     }
 
 }
