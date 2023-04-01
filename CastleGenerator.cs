@@ -8,47 +8,73 @@ public class CastleGenerator : MonoBehaviour
     [SerializeField] private GameObject castleFBX;
     [SerializeField] private int nombreCastles = 10;
 
-    [SerializeField] private GameObject castleTest;
+    //[SerializeField] private GameObject castleTest;
     private List<Castle> castles = new List<Castle>();
 
     // hex grid
     [SerializeField] private GameObject hexGrid;
+    private HexGrid grid;
+
+    // material
+    [ReadOnly,SerializeField] private Material matWall;
 
     void Start()
     {
+        // materials
+        matWall = Resources.Load("Materials/castles/walls_1", typeof(Material)) as Material;
+
+        // hex grid
+        grid = hexGrid.GetComponent<HexGrid>();
+
         // castle test
-        GenerateCastleAtPos(0,0,"KING CASTLE",Color.red);
+        GenerateCastleAtCoord(Vector2Int.zero,"KING CASTLE",Color.red);
 
         // generate random positions on the grid
-        HexGrid grid = hexGrid.GetComponent<HexGrid>();
         Vector2Int[] positions = grid.GetRandomDifferentsPositions(nombreCastles);
 
         // generate castles
         for (int i = 0; i < nombreCastles; i++)
         {
-            GenerateCastleAtPos(positions[i].x, positions[i].y);
+            GenerateCastleAtCoord(positions[i]);
         }
     }
 
-    public void GenerateCastleAtPos(float x, float z,string name = "",Color? c = null)
+    public void GenerateCastleAtPos(float x, float z,string? n = null,Color? c = null)
     {
+        GameObject castle = CreateCastle(n,c);
+        castle.transform.position = new Vector3(x, 0, z);
+        castle.transform.parent = gameObject.transform;
+    }
+
+    public void GenerateCastleAtCoord(Vector2Int pos,string? n = null,Color? c = null)
+    {
+        GameObject castle = CreateCastle(n,c);
+        grid.GetHexAtCoord(pos).Add(castle);
+    }
+
+    public void Update()
+    {
+        if (castles.Count < nombreCastles)
+        {
+            GenerateCastleAtCoord(grid.GetRandomPosition());
+        }
+    }
+
+    // helper functions
+
+    private GameObject CreateCastle(string? n = null,Color? c = null){
+
         // name of castle
-        if (name == "")
-            name = "castle " + (castles.Count + 1).ToString();
+        string name = n ?? "castle " + (castles.Count + 1).ToString();
 
         // generate castle
-        GameObject castle = Instantiate(castleFBX, new Vector3(x, 0, z), Quaternion.identity);
-        castle.transform.parent = gameObject.transform;
+        GameObject castle = Instantiate(castleFBX);
         castle.name = name;
 
-        // materials
-        Material matWall = Resources.Load("Materials/castles/walls_1", typeof(Material)) as Material;
-        castle.transform.Find("donjon").GetComponent<Renderer>().material = matWall;
-        castle.transform.Find("walls").GetComponent<Renderer>().material = matWall;
-
-        // create mesh collider
+        // create mesh collider & apply material
         foreach (Transform child in castle.transform)
         {
+            child.gameObject.GetComponent<Renderer>().material = matWall;
             child.gameObject.AddComponent<MeshCollider>();
         }
 
@@ -59,14 +85,8 @@ public class CastleGenerator : MonoBehaviour
         castle.AddComponent<Castle>();
         castles.Add(castle.GetComponent<Castle>());
         castle.GetComponent<Castle>().init(name, color);
-    }
 
-    public void Update()
-    {
-        if (castles.Count < nombreCastles)
-        {
-            GenerateCastleAtPos(Random.Range(-100, 100), Random.Range(-100, 100));
-        }
+        return castle;
     }
 
 }

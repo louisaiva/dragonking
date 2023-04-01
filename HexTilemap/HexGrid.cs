@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class HexGrid : MonoBehaviour {
     
     [Header("Grid Settings")]
@@ -11,7 +12,7 @@ public class HexGrid : MonoBehaviour {
     [Header("Tile Settings")]
     public float outerSize = 1f;
     public float innerSize = 0.5f;
-    public float height = 2f;
+    public Vector2 height = new Vector2(0.5f,5f);
     public bool isFlatTopped = false;
     public Material material;
 
@@ -38,7 +39,7 @@ public class HexGrid : MonoBehaviour {
                     HexRenderer hexRenderer = child.GetComponent<HexRenderer>();
                     hexRenderer.outerSize = outerSize;
                     hexRenderer.innerSize = innerSize;
-                    hexRenderer.height = height;
+                    hexRenderer.height = Random.Range(height.x,height.y);
                     hexRenderer.isFlatTopped = isFlatTopped;
                     hexRenderer.SetMaterial(material);
                     hexRenderer.DrawMesh();
@@ -58,13 +59,13 @@ public class HexGrid : MonoBehaviour {
         {
             for (int x = 0; x < gridSize.x; x++)
             {
-                GameObject tile = new GameObject($"Hex {x},{y}",typeof(HexRenderer));
-                tile.transform.position = GetPositionForHexFromCoordinates(new Vector2Int(x,y));
+                GameObject tile = new GameObject($"{x}:{y}",typeof(HexRenderer),typeof(HexContainer));
+                tile.transform.position = GetPositionForHexFromCoord(new Vector2Int(x,y));
 
                 HexRenderer hexRenderer = tile.GetComponent<HexRenderer>();
                 hexRenderer.outerSize = outerSize;
                 hexRenderer.innerSize = innerSize;
-                hexRenderer.height = height;
+                hexRenderer.height = Random.Range(height.x,height.y);
                 hexRenderer.isFlatTopped = isFlatTopped;
                 hexRenderer.SetMaterial(material);
                 hexRenderer.DrawMesh();
@@ -80,8 +81,8 @@ public class HexGrid : MonoBehaviour {
         {
             for (int x = 0; x < gridSize.x; x++)
             {
-                GameObject tile = GetHexAtCoordinates(new Vector2Int(x,y)).gameObject;
-                tile.transform.position = GetPositionForHexFromCoordinates(new Vector2Int(x,y));
+                GameObject tile = GetHexAtCoord(new Vector2Int(x,y)).gameObject;
+                tile.transform.position = GetPositionForHexFromCoord(new Vector2Int(x,y));
             }
         }
 
@@ -89,7 +90,7 @@ public class HexGrid : MonoBehaviour {
 
     // helper functions
 
-    public Vector3 GetPositionForHexFromCoordinates(Vector2Int coordinates){
+    public Vector3 GetPositionForHexFromCoord(Vector2Int coordinates){
         
         int column = coordinates.x;
         int row = coordinates.y;
@@ -133,22 +134,25 @@ public class HexGrid : MonoBehaviour {
         return new Vector3(xPosition,0,-yPosition);
     }
 
-    public HexRenderer GetHexAtCoordinates(Vector2Int coordinates){
-        return transform.GetChild(coordinates.y * gridSize.x + coordinates.x).GetComponent<HexRenderer>();
+    public HexContainer GetHexAtCoord(Vector2Int coordinates){
+        return transform.GetChild(coordinates.y * gridSize.x + coordinates.x).GetComponent<HexContainer>();
     }
 
     public Vector2Int[] GetRandomDifferentsPositions(int count){
         Vector2Int[] positions = new Vector2Int[count];
         for (int i = 0; i < count; i++)
         {
-            Vector2Int newPos = new Vector2Int(Random.Range(0,gridSize.x),Random.Range(0,gridSize.y));
+            Vector2Int newPos = GetRandomPosition();
             while (System.Array.Exists(positions, element => element == newPos))
             {
-                newPos = new Vector2Int(Random.Range(0,gridSize.x),Random.Range(0,gridSize.y));
+                newPos = GetRandomPosition();
             }
             positions[i] = newPos;
         }
         return positions;
     }
 
+    public Vector2Int GetRandomPosition(){
+        return new Vector2Int(Random.Range(0,gridSize.x),Random.Range(0,gridSize.y));
+    }
 }

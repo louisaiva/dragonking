@@ -118,7 +118,7 @@ public class CameraMovement : MonoBehaviour
         if (Physics.Raycast(ray, out centerOfScreen, Mathf.Infinity))
         {
             Vector3 difference_vector = centerOfScreen.point - new Vector3(transform.position.x, Y_Anchor, transform.position.z);
-            Debug.Log(difference_vector + " - " + point);
+            //Debug.Log(difference_vector + " - " + point);
             destination = point - difference_vector;
         }
     }
