@@ -1,6 +1,6 @@
-"# dragonking" 
+# dragonking
 
-"## Introduction"
+## Introduction
 
 Little game made with Unity3D. Only the Scripts are available here.
 The full game will be made of different little games like this one.
