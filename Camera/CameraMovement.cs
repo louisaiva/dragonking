@@ -12,7 +12,16 @@ public class CameraMovement : MonoBehaviour
     [SerializeField] private float ratioSpdZoom = 5f;
     [SerializeField] private float ratioEnhancer = 0.04f;
 
+    [ReadOnly, SerializeField] private float Y_Anchor = 20f;
+
     [ReadOnly, SerializeField] private Vector3 destination;
+
+    // Start is called before the first frame update
+    public void Start()
+    {
+        resetDestination();
+        transform.position = new Vector3(transform.position.x, Y_Anchor, transform.position.z);
+    }
 
     // Update is called once per frame
     public void Update()
@@ -41,7 +50,6 @@ public class CameraMovement : MonoBehaviour
 
     }
     
-
     // handling things
 
     public void HandleMovement()
@@ -73,31 +81,6 @@ public class CameraMovement : MonoBehaviour
             // delete the destination
             resetDestination();
         }
-    }
-
-    public void HandleZoomOrtho(float zoom)
-    {   
-        //Debug.Log(zoom);
-
-        float finalZoom = transform.GetComponent<Camera>().orthographicSize;
-        float ratio = Mathf.Sign(zoom) * zoomSpeed *-1;
-        finalZoom += ratio;
-
-        if (finalZoom <= 10)
-        {
-            finalZoom = 10;
-        }
-        else if (finalZoom >= 100)
-        {
-            finalZoom = 100;
-        }
-
-        if (finalZoom != transform.GetComponent<Camera>().orthographicSize)
-        {
-            transform.GetComponent<Camera>().orthographicSize = finalZoom;
-
-        }
-
     }
 
     public void HandleZoomPerspective(float zoom)
@@ -134,7 +117,8 @@ public class CameraMovement : MonoBehaviour
         Ray ray = transform.GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
         if (Physics.Raycast(ray, out centerOfScreen, Mathf.Infinity))
         {
-            Vector3 difference_vector = centerOfScreen.point - transform.position;
+            Vector3 difference_vector = centerOfScreen.point - new Vector3(transform.position.x, Y_Anchor, transform.position.z);
+            Debug.Log(difference_vector + " - " + point);
             destination = point - difference_vector;
         }
     }

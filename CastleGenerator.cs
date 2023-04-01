@@ -4,34 +4,45 @@ using UnityEngine;
 
 public class CastleGenerator : MonoBehaviour
 {
-    
+    // castles
     [SerializeField] private GameObject castleFBX;
     [SerializeField] private int nombreCastles = 10;
 
+    [SerializeField] private GameObject castleTest;
     private List<Castle> castles = new List<Castle>();
+
+    // hex grid
+    [SerializeField] private GameObject hexGrid;
 
     void Start()
     {
+        // castle test
+        GenerateCastleAtPos(0,0,"KING CASTLE",Color.red);
+
+        // generate random positions on the grid
+        HexGrid grid = hexGrid.GetComponent<HexGrid>();
+        Vector2Int[] positions = grid.GetRandomDifferentsPositions(nombreCastles);
+
+        // generate castles
         for (int i = 0; i < nombreCastles; i++)
         {
-            GenerateCastle(Random.Range(-100, 100), Random.Range(-100, 100));
+            GenerateCastleAtPos(positions[i].x, positions[i].y);
         }
     }
 
-    public void GenerateCastle(int x, int z)
+    public void GenerateCastleAtPos(float x, float z,string name = "",Color? c = null)
     {
-        string castleName = "castle " + (castles.Count +1).ToString();
+        // name of castle
+        if (name == "")
+            name = "castle " + (castles.Count + 1).ToString();
+
         // generate castle
         GameObject castle = Instantiate(castleFBX, new Vector3(x, 0, z), Quaternion.identity);
         castle.transform.parent = gameObject.transform;
-        castle.name = castleName;
-        
+        castle.name = name;
 
-        // colors and name of castle
-        Material mat1 = Resources.Load("Materials/castles/1", typeof(Material)) as Material;
+        // materials
         Material matWall = Resources.Load("Materials/castles/walls_1", typeof(Material)) as Material;
-        
-        // apply materials
         castle.transform.Find("donjon").GetComponent<Renderer>().material = matWall;
         castle.transform.Find("walls").GetComponent<Renderer>().material = matWall;
 
@@ -41,17 +52,20 @@ public class CastleGenerator : MonoBehaviour
             child.gameObject.AddComponent<MeshCollider>();
         }
 
+        // color
+        Color color = c ?? new Color(Random.value, Random.value, Random.value);
+
         // give script to castle and give random color
         castle.AddComponent<Castle>();
         castles.Add(castle.GetComponent<Castle>());
-        castle.GetComponent<Castle>().init(castleName, new Color(Random.value, Random.value, Random.value));
+        castle.GetComponent<Castle>().init(name, color);
     }
 
     public void Update()
     {
         if (castles.Count < nombreCastles)
         {
-            GenerateCastle(Random.Range(-100, 100), Random.Range(-100, 100));
+            GenerateCastleAtPos(Random.Range(-100, 100), Random.Range(-100, 100));
         }
     }
 

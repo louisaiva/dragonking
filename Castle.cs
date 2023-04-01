@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Castle : MonoBehaviour, I_HasUI, I_Hooverable
+public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
 {
 
     // castle
 
     [ReadOnly,SerializeField] private string castleName;
     [ReadOnly,SerializeField] private Color color;
+
+    // selection sphere
+    [SerializeField] private float selectionSphereRadius = 3.0f;
 
     // life
 
@@ -34,6 +37,10 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable
         {
             child.GetComponent<Renderer>().material.color = color;
         }
+
+        // selection sphere
+        this.gameObject.AddComponent<SphereCollider>();
+        transform.GetComponent<SphereCollider>().radius = selectionSphereRadius;
 
         // life
         maxLife = Mathf.RoundToInt(Random.Range(100, 900));
@@ -118,9 +125,45 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable
 
     public void OnHooverEnter()
     {
+        // change the layer of the castle to "outlined"
+
+        foreach (Transform child in transform)
+        {
+            child.gameObject.layer = LayerMask.NameToLayer("outlined");
+        }
+
+        gameObject.layer = LayerMask.NameToLayer("outlined");
     }
 
     public void OnHooverExit()
     {
+        // change the layer of the castle to "default" if not selected
+
+        if (ui.activeSelf)
+            return;
+
+        foreach (Transform child in transform)
+        {
+            child.gameObject.layer = LayerMask.NameToLayer("Default");
+        }
+
+        gameObject.layer = LayerMask.NameToLayer("Default");
     }
+
+    // click
+
+    public void OnClick()
+    {
+        // show ui
+        OnHooverEnter();
+        SwitchUI();
+    }
+
+    public void OnDeclick()
+    {
+        // hide ui
+        HideUI();
+        OnHooverExit();
+    }
+
 }

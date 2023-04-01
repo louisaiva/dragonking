@@ -41,25 +41,8 @@ public class InputHandler : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(castPoint,out hit, Mathf.Infinity))
         {   
-            Debug.Log(hit.point);
-            camera.GetComponent<CameraMovement>().RecenterAtPoint(hit.point);
-        }
-    }
-
-    // Update is called once per frame
-
-    public void Update()
-    {
-        Vector3 mouse = Input.mousePosition;
-        Ray castPoint = camera.GetComponent<Camera>().ScreenPointToRay(mouse);
-        RaycastHit hit;
-        if (Physics.Raycast(castPoint,out hit, Mathf.Infinity))
-        {
-            GameObject go = hit.transform.gameObject;
-            if (go != null && (go.GetComponent<I_Hooverable>() != null))
-            {
-                go.GetComponent<I_Hooverable>().OnHooverEnter();
-            }
+            //Debug.Log(hit.point);
+            camera.GetComponent<CameraAsPlayer>().HandleClick(hit);
         }
     }
 
