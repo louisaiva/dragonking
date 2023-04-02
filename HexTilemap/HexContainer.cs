@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HexContainer : MonoBehaviour
+public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
 {
     private HexRenderer renderer;
 
@@ -48,4 +48,65 @@ public class HexContainer : MonoBehaviour
         }
     }
 
+    // hoover
+
+    public void OnHooverEnter()
+    {
+        // change the layer of the hex to "outlined"
+
+        if (gameObject.layer == LayerMask.NameToLayer("clicked"))
+            return;
+        gameObject.layer = LayerMask.NameToLayer("outlined");
+
+    }
+
+    public void OnHooverExit()
+    {
+        // change the layer of the hex to "default" if not already clicked
+
+        if (gameObject.layer == LayerMask.NameToLayer("clicked"))
+            return;
+
+        gameObject.layer = LayerMask.NameToLayer("selectable");
+    }
+
+    // click
+
+    public void OnClick()
+    {
+        // change the layer of the hex to "clicked"
+        gameObject.layer = LayerMask.NameToLayer("clicked");
+
+        // change the layer of the hex's children to "selectable"
+        foreach (Transform child in transform)
+        {
+            if (child.GetComponent<I_Hooverable>() != null)
+            {
+                child.gameObject.layer = LayerMask.NameToLayer("selectable");
+                foreach (Transform child2 in child)
+                {
+                    child2.gameObject.layer = LayerMask.NameToLayer("selectable");
+                }
+            }
+        }
+    }
+
+    public void OnDeclick()
+    {
+        // change the layer of the hex to "selectable"
+        gameObject.layer = LayerMask.NameToLayer("selectable");
+
+        // change the layer of the hex's children to "Default"
+        foreach (Transform child in transform)
+        {
+            if (child.GetComponent<I_Hooverable>() != null)
+            {
+                child.gameObject.layer = LayerMask.NameToLayer("Default");
+                foreach (Transform child2 in child)
+                {
+                    child2.gameObject.layer = LayerMask.NameToLayer("Default");
+                }
+            }
+        }
+    }
 }

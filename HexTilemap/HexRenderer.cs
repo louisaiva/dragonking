@@ -17,7 +17,7 @@ public struct TriFace
 }
 
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class HexRenderer : MonoBehaviour {
     
     // mesh
@@ -80,6 +80,9 @@ public class HexRenderer : MonoBehaviour {
 
         // setting the bounds of the mesh
         m_mesh.bounds = new Bounds(Vector3.zero, new Vector3(outerSize * 2f, height, outerSize * 2f));
+
+        // apply mesh to collider
+        GetComponent<MeshCollider>().sharedMesh = m_mesh;
 
         //Debug.Log(gameObject.name + " mesh : " + m_mesh.vertexCount + " vertices, " + m_mesh.triangles.Length + " triangles, " + m_mesh.uv.Length + " uvs");
     }

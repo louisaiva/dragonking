@@ -12,7 +12,7 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
     [ReadOnly,SerializeField] private Color color;
 
     // selection sphere
-    [SerializeField] private float selectionSphereRadius = 3.0f;
+    //[SerializeField] private float selectionSphereRadius = 3.0f;
 
     // life
 
@@ -39,8 +39,8 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
         }
 
         // selection sphere
-        this.gameObject.AddComponent<SphereCollider>();
-        transform.GetComponent<SphereCollider>().radius = selectionSphereRadius;
+        //this.gameObject.AddComponent<SphereCollider>();
+        //transform.GetComponent<SphereCollider>().radius = selectionSphereRadius;
 
         // life
         maxLife = Mathf.RoundToInt(Random.Range(100, 900));
@@ -144,10 +144,10 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
 
         foreach (Transform child in transform)
         {
-            child.gameObject.layer = LayerMask.NameToLayer("Default");
+            child.gameObject.layer = LayerMask.NameToLayer("selectable");
         }
 
-        gameObject.layer = LayerMask.NameToLayer("Default");
+        gameObject.layer = LayerMask.NameToLayer("selectable");
     }
 
     // click

@@ -4,8 +4,7 @@ using UnityEngine;
 
 public interface I_Hooverable
 {
-    //GameObject hooverGO { get; set; }
-
+    GameObject gameObject { get ; } 
     void OnHooverEnter();
     void OnHooverExit();
 }

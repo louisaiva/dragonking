@@ -61,6 +61,7 @@ public class HexGrid : MonoBehaviour {
             {
                 GameObject tile = new GameObject($"{x}:{y}",typeof(HexRenderer),typeof(HexContainer));
                 tile.transform.position = GetPositionForHexFromCoord(new Vector2Int(x,y));
+                tile.layer = LayerMask.NameToLayer("selectable");
 
                 HexRenderer hexRenderer = tile.GetComponent<HexRenderer>();
                 hexRenderer.outerSize = outerSize;

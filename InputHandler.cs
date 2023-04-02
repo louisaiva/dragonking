@@ -37,13 +37,7 @@ public class InputHandler : MonoBehaviour
     {
         //Debug.Log("clicked evt");
         Vector3 mouse = Input.mousePosition;
-        Ray castPoint = camera.GetComponent<Camera>().ScreenPointToRay(mouse);
-        RaycastHit hit;
-        if (Physics.Raycast(castPoint,out hit, Mathf.Infinity))
-        {   
-            //Debug.Log(hit.point);
-            camera.GetComponent<CameraAsPlayer>().HandleClick(hit);
-        }
+        camera.GetComponent<CameraAsPlayer>().HandleClick(mouse);
     }
 
 }

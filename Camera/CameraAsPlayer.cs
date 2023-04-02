@@ -21,6 +21,8 @@ public class CameraAsPlayer : MonoBehaviour
     {
         // hoover
         HandleHoover();
+
+        Debug.Log("hoover : " + hooveredObject + "/ selected : " + selectedObject);
     }
 
     // handlers
@@ -32,10 +34,17 @@ public class CameraAsPlayer : MonoBehaviour
 
         // we check if we are hoovering something
         Vector3 mouse = Input.mousePosition;
+
+        // layerMask
+        LayerMask layerMask = LayerMask.GetMask("selectable", "outlined","clicked");
+
+
+        // raycast
         Ray castPoint = transform.GetComponent<Camera>().ScreenPointToRay(mouse);
         RaycastHit hit;
-        if (Physics.Raycast(castPoint,out hit, Mathf.Infinity))
+        if (Physics.Raycast(castPoint,out hit, Mathf.Infinity, layerMask))
         {
+            //Debug.Log(hit.transform.gameObject+" "+hit.transform.gameObject.layer);
             GameObject go = hit.transform.gameObject;
             if (go != null)
             {
@@ -76,62 +85,66 @@ public class CameraAsPlayer : MonoBehaviour
                 hooveredObject.OnHooverEnter();
             }
         }
+        //Debug.Log(hooveredObject);
 
     }
 
-    public void HandleClick(RaycastHit hit)
+    public void HandleClick(Vector3 mouse)
     {
 
         I_Clickable newSelectedObject = null;
+        Vector3 objectif = new Vector3(-1, -1, -1);
 
-        // on check si on a cliqué sur un objet
-        Vector3 objectif = hit.point;
-        GameObject go = hit.transform.gameObject;
-        if (go != null)
+        // on fait un premier test pour voir si on a cliqué sur un objet (et pas sur un sol vide)
+        // (si on avait déjà un objet hoovered forcément on clique sur lui)
+
+        if (hooveredObject != null)
         {
-            // on touche qq chose
+            GameObject go = hooveredObject.gameObject;
+
             if (go.GetComponent<I_Clickable>() != null)
             {
                 // on touche l'objet en lui meme
-                //go.GetComponent<I_Clickable>().OnClick();
                 newSelectedObject = go.GetComponent<I_Clickable>();
                 objectif = go.transform.position;
             }
-            else if ((go.transform.parent != null) && (go.transform.parent.GetComponent<I_Clickable>() != null))
-            {
-                // on touche un enfant de l'objet
-                newSelectedObject = go.transform.parent.GetComponent<I_Clickable>();
-                //newSelectedObject.OnClick();
-                objectif = go.transform.parent.transform.position;
-            }
-        }
 
-        // on change l'objet sélectionné
-        if (selectedObject == null)
-        {
+            // on change l'objet sélectionné
             if (newSelectedObject != null)
             {
-                selectedObject = newSelectedObject;
-                selectedObject.OnClick();
+                if (selectedObject == null)
+                {
+                    selectedObject = newSelectedObject;
+                    selectedObject.OnClick();
+                    camMovement.RecenterAtPoint(objectif);
+                }
+                else if (newSelectedObject != selectedObject)
+                {
+                    selectedObject.OnDeclick();
+                    selectedObject = newSelectedObject;
+                    selectedObject.OnClick();
+                    camMovement.RecenterAtPoint(objectif);
+                }
+                return;
             }
         }
-        else
+        
+        
+        // on a cliqué sur le sol random
+
+        if (selectedObject != null)
         {
-            if (newSelectedObject == null)
-            {
-                selectedObject.OnDeclick();
-                selectedObject = null;
-            }
-            else if (newSelectedObject != selectedObject)
-            {
-                selectedObject.OnDeclick();
-                selectedObject = newSelectedObject;
-                selectedObject.OnClick();
-            }
+            selectedObject.OnDeclick();
+            selectedObject = null;
         }
 
-        // on recentre la caméra sur l'objet cliqué
-        camMovement.RecenterAtPoint(objectif);
+        // on fait un raycast pour obtenir la position du sol où on a cliqué
+        Ray castPoint = GetComponent<Camera>().ScreenPointToRay(mouse);
+        RaycastHit hit;
+        if (Physics.Raycast(castPoint,out hit, Mathf.Infinity))
+        {   
+            camMovement.RecenterAtPoint(hit.point);
+        }
     }
 
 }
