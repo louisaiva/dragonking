@@ -17,7 +17,11 @@ public class HexGrid : MonoBehaviour {
     public Material material;
 
     // recreate grid
-    private bool recreateGrid = false;
+    private bool refreshGrid = false;
+
+    // perl noise
+    [Header("Helper Tools")]
+    [SerializeField] private GameObject hexPerlinHandler;
 
     // unity functions
 
@@ -27,27 +31,14 @@ public class HexGrid : MonoBehaviour {
 
     private void OnValidate() {
         if (Application.isPlaying)
-            recreateGrid = true;
+            refreshGrid = true;
     }
 
     private void Update() {
-        if (recreateGrid && (gridSize.x > 0 && gridSize.y > 0)){
+        if (refreshGrid && (gridSize.x > 0 && gridSize.y > 0)){
             
-            foreach (Transform child in transform)
-            {   
-                if (child.GetComponent<HexRenderer>() != null){
-                    HexRenderer hexRenderer = child.GetComponent<HexRenderer>();
-                    hexRenderer.outerSize = outerSize;
-                    hexRenderer.innerSize = innerSize;
-                    hexRenderer.height = Random.Range(height.x,height.y);
-                    hexRenderer.isFlatTopped = isFlatTopped;
-                    hexRenderer.SetMaterial(material);
-                    hexRenderer.DrawMesh();
-                }
-            }
-
-            PlaceHexs();
-            recreateGrid = false;
+            RefreshGrid();
+            refreshGrid = false;
         }
     }
 
@@ -55,6 +46,7 @@ public class HexGrid : MonoBehaviour {
 
     private void GenerateGrid(){
 
+        // initialize grid
         for (int y = 0; y < gridSize.y; y++)
         {
             for (int x = 0; x < gridSize.x; x++)
@@ -62,18 +54,48 @@ public class HexGrid : MonoBehaviour {
                 GameObject tile = new GameObject($"{x}:{y}",typeof(HexRenderer),typeof(HexContainer));
                 tile.transform.position = GetPositionForHexFromCoord(new Vector2Int(x,y));
                 tile.layer = LayerMask.NameToLayer("selectable");
-
-                HexRenderer hexRenderer = tile.GetComponent<HexRenderer>();
-                hexRenderer.outerSize = outerSize;
-                hexRenderer.innerSize = innerSize;
-                hexRenderer.height = Random.Range(height.x,height.y);
-                hexRenderer.isFlatTopped = isFlatTopped;
-                hexRenderer.SetMaterial(material);
-                hexRenderer.DrawMesh();
-
                 tile.transform.SetParent(transform,true);
             }
         }
+        // and refresh it (means actually draw the hexs)
+        RefreshGrid();
+    }
+
+    private void RefreshGrid(){
+
+        float[,] heightMap = hexPerlinHandler.GetComponent<HexHeightPerlin>().GetHexHeightMap(gridSize.x,gridSize.y);
+        for (int i=0; i<transform.childCount; i++) {
+            
+            GameObject child = transform.GetChild(i).gameObject;
+
+            if (child.GetComponent<HexRenderer>() != null){
+
+                // get coordinates
+                int x = i % gridSize.x;
+                int y = i / gridSize.x;
+
+                // Debug.Log($"x: {x} y: {y} - "+child.name);
+
+                HexRenderer hexRenderer = child.GetComponent<HexRenderer>();
+                hexRenderer.outerSize = outerSize;
+                hexRenderer.innerSize = innerSize;
+                hexRenderer.height = heightMap[x,y];
+                hexRenderer.isFlatTopped = isFlatTopped;
+
+                // change color of material based on height
+                /*Material mat = new Material(Shader.Find("Standard"));
+                Color color = new Color(hexRenderer.height,hexRenderer.height,hexRenderer.height);
+                mat.color = color;
+                hexRenderer.SetMaterial(mat);*/
+                hexRenderer.SetMaterial(material);
+
+                // draw mesh
+                hexRenderer.DrawMesh();
+            }
+        }
+
+        PlaceHexs();
+
     }
 
     private void PlaceHexs(){
@@ -155,5 +177,9 @@ public class HexGrid : MonoBehaviour {
 
     public Vector2Int GetRandomPosition(){
         return new Vector2Int(Random.Range(0,gridSize.x),Random.Range(0,gridSize.y));
+    }
+
+    public void Refresh(){
+        refreshGrid = true;
     }
 }

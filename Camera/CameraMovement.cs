@@ -7,14 +7,21 @@ public class CameraMovement : MonoBehaviour
 
     [SerializeField] private GameObject inputHandler;
 
+    [Header("Camera movement")]
     [SerializeField] private float speed = 40f;
     [SerializeField] private float zoomSpeed = 5f;
     [SerializeField] private float ratioSpdZoom = 5f;
     [SerializeField] private float ratioEnhancer = 0.04f;
 
-    [ReadOnly, SerializeField] private float Y_Anchor = 20f;
+    [Header("Camera rotation")]
+    [SerializeField] private bool autoRotating = false;
+    [SerializeField] private Vector2 rotationLine = new Vector2(0f, 0f);
 
+    [Header("Camera destination")]
+    [SerializeField] private bool allowClick = true;
+    [ReadOnly, SerializeField] private float Y_Anchor = 150f;
     [ReadOnly, SerializeField] private Vector3 destination;
+    
 
     // Start is called before the first frame update
     public void Start()
@@ -46,6 +53,12 @@ public class CameraMovement : MonoBehaviour
         if (zoom != 0)
         {
             HandleZoomPerspective(zoom);
+        }
+
+        // auto rotate
+        if (autoRotating)
+        {
+            AutoRotate();
         }
 
     }
@@ -105,11 +118,19 @@ public class CameraMovement : MonoBehaviour
         }
     }
 
+    public void AutoRotate()
+    {
+        transform.RotateAround(new Vector3(rotationLine.x, Y_Anchor, rotationLine.y), Vector3.up, 20 * Time.deltaTime);
+    }
 
     // useful fonctions
 
     public void RecenterAtPoint(Vector3 point)
     {
+
+        if (!allowClick)
+            return;
+
         // using Lerp
         // we need to calculate the moving vector of the camera in order to replace the point at the center of the screen
 
@@ -126,6 +147,16 @@ public class CameraMovement : MonoBehaviour
     private void resetDestination()
     {
         destination = new Vector3(0, -10000, 0);
+    }
+
+    private void OnDrawGizmos() {
+        // draw the destination
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(destination, 5f);
+
+        // draw the rotation line
+        Gizmos.color = Color.blue;
+        Gizmos.DrawLine(new Vector3(rotationLine.x, -1000, rotationLine.y), new Vector3(rotationLine.x, 1000, rotationLine.y));
     }
 
 }

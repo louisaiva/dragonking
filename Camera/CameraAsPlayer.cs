@@ -22,7 +22,7 @@ public class CameraAsPlayer : MonoBehaviour
         // hoover
         HandleHoover();
 
-        Debug.Log("hoover : " + hooveredObject + "/ selected : " + selectedObject);
+        // Debug.Log("hoover : " + hooveredObject + "/ selected : " + selectedObject);
     }
 
     // handlers

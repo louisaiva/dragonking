@@ -179,6 +179,10 @@ public class HexRenderer : MonoBehaviour {
         m_meshRenderer.material = material;
     }
 
+    public void SetColor(Color color){
+        m_meshRenderer.material.color = color;
+    }
+
 
     // getters
 

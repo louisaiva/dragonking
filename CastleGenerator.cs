@@ -27,7 +27,7 @@ public class CastleGenerator : MonoBehaviour
         grid = hexGrid.GetComponent<HexGrid>();
 
         // castle test
-        GenerateCastleAtCoord(Vector2Int.zero,"KING CASTLE",Color.red);
+        GenerateCastleAtCoord(Vector2Int.zero,"KING CASTLE");
 
         // generate random positions on the grid
         Vector2Int[] positions = grid.GetRandomDifferentsPositions(nombreCastles);

@@ -31,16 +31,12 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
         this.castleName = name;
         this.color = color;
 
-        float deltaColorEmission = 0.5f;
+        //float deltaColorEmission = 0.5f;
 
         foreach (Transform child in transform)
         {
             child.GetComponent<Renderer>().material.color = color;
         }
-
-        // selection sphere
-        //this.gameObject.AddComponent<SphereCollider>();
-        //transform.GetComponent<SphereCollider>().radius = selectionSphereRadius;
 
         // life
         maxLife = Mathf.RoundToInt(Random.Range(100, 900));
