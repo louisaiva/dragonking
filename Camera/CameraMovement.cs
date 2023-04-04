@@ -10,17 +10,18 @@ public class CameraMovement : MonoBehaviour
     [Header("Camera movement")]
     [SerializeField] private float speed = 40f;
     [SerializeField] private float zoomSpeed = 5f;
+    [SerializeField] private float rotationSpeed = 30f;
+
+    [Header("Depreciated parameters")]
     [SerializeField] private float ratioSpdZoom = 5f;
     [SerializeField] private float ratioEnhancer = 0.04f;
 
-    [Header("Camera rotation")]
+    [Header("Camera rotation")] 
     [SerializeField] private bool autoRotating = false;
-    [SerializeField] private Vector2 rotationLine = new Vector2(0f, 0f);
 
     [Header("Camera destination")]
-    [SerializeField] private bool allowClick = true;
-    
-    [SerializeField] private float cam_angle = 45f;
+    [SerializeField] private float cam_angle_Y = 45f;
+    [SerializeField] private float cam_angle_XZ = 0f;
     [SerializeField] private float cam_distance = 70f;
     [ReadOnly,SerializeField] private Vector3 cam_offset;
     [ReadOnly, SerializeField] private Vector3 dest_look_at;
@@ -28,54 +29,58 @@ public class CameraMovement : MonoBehaviour
     
     // unity functions
 
-    public void Start()
-    {
+    public void Start(){
         // init destination
         GameObject hexGrid = GameObject.Find("hex_grid");
         look_at = hexGrid.GetComponent<HexGrid>().GetPositionOfCenterHex();
 
         // init camera
-        OnValidate();
+        LoadView(View.close);
+        RecalculateOffset();
 
     }
 
     public void Update()
     {
-        // calculate look_at with cam_offset
-        look_at = transform.position - cam_offset;
 
-        // move to destination
+        Vector3 cam_param = new Vector3(cam_angle_XZ, cam_angle_Y, cam_distance);
+
+        // move to destination with mouse click
         if (Vector3.Distance(look_at, dest_look_at) > 0.05f)
         {
             transform.position = Vector3.Lerp(transform.position, dest_look_at+cam_offset, speed * Time.deltaTime);
         }
 
-        // move with keyboard
-        HandleMovement();
-
         // zoom with mouse wheel
-        float zoom = inputHandler.GetComponent<InputHandler>().zoomInput();
-        if (zoom != 0)
+        HandleZoom();
+
+        // rotate with Q,D
+        if (autoRotating)
+            cam_angle_XZ += 20 * Time.deltaTime;
+        else
+            HandleRotation();
+
+        // check if the parameters have changed
+        if (cam_param != new Vector3(cam_angle_XZ, cam_angle_Y, cam_distance))
         {
-            HandleZoomPerspective(zoom);
+            RecalculateOffset();
         }
 
-        // auto rotate
-        if (autoRotating)
-        {
-            AutoRotate();
-        }
+        // recalculate look_at with cam_offset and then rotate
+        look_at = transform.position - cam_offset;
+        transform.LookAt(look_at);
     }
 
     private void OnValidate() {
-        cam_offset = new Vector3(0f, cam_distance * Mathf.Sin(cam_angle * Mathf.Deg2Rad), cam_distance * Mathf.Cos(cam_angle * Mathf.Deg2Rad));
-        transform.position = look_at + cam_offset;
-        transform.LookAt(look_at);
+
+        if (!autoRotating)
+            RecalculateOffset();
+
     }
 
     // handling things
 
-    public void HandleMovement()
+    public void HandleArchaicMovement()
     {
         Vector2 moveInput = inputHandler.GetComponent<InputHandler>().moveInput();
 
@@ -106,7 +111,18 @@ public class CameraMovement : MonoBehaviour
         }
     }
 
-    public void HandleZoomPerspective(float zoom)
+    public void HandleRotation()
+    {
+        Vector2 moveInput = inputHandler.GetComponent<InputHandler>().moveInput();
+
+        float rotation = moveInput.x * rotationSpeed * Time.deltaTime;
+        if (rotation != 0)
+        {
+            cam_angle_XZ += rotation;
+        }
+    }
+
+    public void HandleZoomPerspectiveFOV(float zoom)
     {
         float finalZoom = transform.GetComponent<Camera>().fieldOfView;
         float ratio = Mathf.Sign(zoom) * zoomSpeed * -1;
@@ -128,57 +144,80 @@ public class CameraMovement : MonoBehaviour
         }
     }
 
-    public void AutoRotate()
-    {
-        transform.RotateAround(new Vector3(rotationLine.x, transform.position.y, rotationLine.y), Vector3.up, 20 * Time.deltaTime);
+    public void HandleZoom(){
+
+        float zoom = inputHandler.GetComponent<InputHandler>().zoomInput();
+        if (zoom == 0)
+            return;
+
+        float finalZoom = cam_distance;
+        float ratio = Mathf.Sign(zoom) * zoomSpeed * -1;
+        finalZoom += ratio;
+
+        if (finalZoom <= 10)
+        {
+            finalZoom = 10;
+        }
+        else if (finalZoom >= 300)
+        {
+            finalZoom = 300;
+        }
+
+        if (finalZoom != cam_distance)
+            cam_distance = finalZoom;
+
     }
 
     // useful fonctions
 
-    /* public void RecenterAtRaycast(Vector3 point)
-    {
-
-        /* if (!allowClick)
-            return; 
-
-        // using Lerp
-        // we need to calculate the moving vector of the camera in order to replace the point at the center of the screen
-
-        RaycastHit centerOfScreen;
-        Ray ray = transform.GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-        if (Physics.Raycast(ray, out centerOfScreen, Mathf.Infinity))
-        {
-            Vector3 difference_vector = centerOfScreen.point - new Vector3(transform.position.x, 0, transform.position.z);
-            //Debug.Log(difference_vector + " - " + point);
-            Vector3 newDest = point - difference_vector;
-            newDest.y = cam_offset.y + point.y;
-            destination = newDest;
-            Debug.Log(destination-point);
-        }
-    } */
-
     public void RecenterAtPoint(Vector3 point)
     {
-        //Vector3 newDest = point + cam_offset;
-        //Debug.Log("point" + point + " - offest_camera" + cam_offset + " - newDest" + newDest );
         dest_look_at = point;
-
     }
 
-    /* private void resetDestination()
-    {
-        destination = new Vector3(0, -10000, 0);
-    } */
+    private void RecalculateOffset(){
+
+        
+        if (cam_angle_XZ > 360)
+            cam_angle_XZ %= 360;
+        else if (cam_angle_XZ < 0)
+            cam_angle_XZ = 360 - cam_angle_XZ;
+
+        if (cam_angle_Y > 360)
+            cam_angle_Y %= 360;
+        else if (cam_angle_Y < 0)
+            cam_angle_Y = 360 - cam_angle_Y;
+
+
+        float dx = Mathf.Cos(cam_angle_XZ * Mathf.Deg2Rad) * Mathf.Cos(cam_angle_Y * Mathf.Deg2Rad) * cam_distance;
+        float dy = Mathf.Sin(cam_angle_Y * Mathf.Deg2Rad) * cam_distance;
+        float dz = Mathf.Sin(cam_angle_XZ * Mathf.Deg2Rad) * Mathf.Cos(cam_angle_Y * Mathf.Deg2Rad) * cam_distance;
+
+        cam_offset = new Vector3(dx, dy, dz);
+        //transform.position = look_at + cam_offset;
+        
+    }
 
     private void OnDrawGizmos()
     {
         // draw the destination
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(dest_look_at, 5f);
-
-        // draw the rotation line
-        Gizmos.color = Color.blue;
-        Gizmos.DrawLine(new Vector3(rotationLine.x, -1000, rotationLine.y), new Vector3(rotationLine.x, 1000, rotationLine.y));
+        Gizmos.DrawSphere(dest_look_at, 2f);
     }
 
+    public void LoadView(Vector3 view)
+    {
+        cam_angle_Y = view.x;
+        cam_angle_XZ = view.y;
+        cam_distance = view.z;
+        RecalculateOffset();
+    }
+
+}
+
+static class View
+{
+    public static Vector3 standard = new Vector3(45f, 0f, 70f);
+    public static Vector3 top = new Vector3(90f, 0f, 70f);
+    public static Vector3 close = new Vector3(20f, 0f, 70f);
 }
