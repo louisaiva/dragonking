@@ -91,7 +91,7 @@ public class HexHeightPerlin : MonoBehaviour {
                 int row_x_offset = (y%2 == 0) ? 0 : 2;
                 Vector2Int hexTopPoint = new Vector2Int(x*hex_padding.x + hex_offset.x+row_x_offset, y*hex_padding.y + hex_offset.y);
                 
-                Debug.Log("x: " + hexTopPoint.x + " y: " + hexTopPoint.y);
+                //Debug.Log("x: " + hexTopPoint.x + " y: " + hexTopPoint.y);
 
                 // we get the height of the hexagon
                 hexHeightMap[x, y] = GetHexHeight(hexTopPoint);

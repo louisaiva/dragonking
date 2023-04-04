@@ -109,4 +109,9 @@ public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
             }
         }
     }
+
+    public Vector3 GetRecenterPosition()
+    {
+        return renderer.GetTopMidPosition();
+    }
 }

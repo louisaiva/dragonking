@@ -19,30 +19,35 @@ public class CameraMovement : MonoBehaviour
 
     [Header("Camera destination")]
     [SerializeField] private bool allowClick = true;
-    [ReadOnly, SerializeField] private float Y_Anchor = 150f;
-    [ReadOnly, SerializeField] private Vector3 destination;
     
+    [SerializeField] private float cam_angle = 45f;
+    [SerializeField] private float cam_distance = 70f;
+    [ReadOnly,SerializeField] private Vector3 cam_offset;
+    [ReadOnly, SerializeField] private Vector3 dest_look_at;
+    [ReadOnly, SerializeField] private Vector3 look_at;
+    
+    // unity functions
 
-    // Start is called before the first frame update
     public void Start()
     {
-        resetDestination();
-        transform.position = new Vector3(transform.position.x, Y_Anchor, transform.position.z);
+        // init destination
+        GameObject hexGrid = GameObject.Find("hex_grid");
+        look_at = hexGrid.GetComponent<HexGrid>().GetPositionOfCenterHex();
+
+        // init camera
+        OnValidate();
+
     }
 
-    // Update is called once per frame
     public void Update()
     {
+        // calculate look_at with cam_offset
+        look_at = transform.position - cam_offset;
 
         // move to destination
-        if (destination.y > 0 && transform.position != destination)
+        if (Vector3.Distance(look_at, dest_look_at) > 0.05f)
         {
-            transform.position = Vector3.Lerp(transform.position, destination, speed * Time.deltaTime);
-
-            if (Vector3.Distance(transform.position, destination) < 0.05f)
-            {
-                resetDestination();
-            }
+            transform.position = Vector3.Lerp(transform.position, dest_look_at+cam_offset, speed * Time.deltaTime);
         }
 
         // move with keyboard
@@ -60,9 +65,14 @@ public class CameraMovement : MonoBehaviour
         {
             AutoRotate();
         }
-
     }
-    
+
+    private void OnValidate() {
+        cam_offset = new Vector3(0f, cam_distance * Mathf.Sin(cam_angle * Mathf.Deg2Rad), cam_distance * Mathf.Cos(cam_angle * Mathf.Deg2Rad));
+        transform.position = look_at + cam_offset;
+        transform.LookAt(look_at);
+    }
+
     // handling things
 
     public void HandleMovement()
@@ -87,12 +97,12 @@ public class CameraMovement : MonoBehaviour
             if (speed > maxSpeed)
                 speed = maxSpeed;
 
-            Debug.Log(speed);
+            //Debug.Log(speed);
 
             transform.position = Vector3.Lerp(transform.position, transform.position+movement, speed * Time.deltaTime);
 
-            // delete the destination
-            resetDestination();
+            // reset the destination
+            dest_look_at = transform.position - cam_offset;
         }
     }
 
@@ -120,16 +130,16 @@ public class CameraMovement : MonoBehaviour
 
     public void AutoRotate()
     {
-        transform.RotateAround(new Vector3(rotationLine.x, Y_Anchor, rotationLine.y), Vector3.up, 20 * Time.deltaTime);
+        transform.RotateAround(new Vector3(rotationLine.x, transform.position.y, rotationLine.y), Vector3.up, 20 * Time.deltaTime);
     }
 
     // useful fonctions
 
-    public void RecenterAtPoint(Vector3 point)
+    /* public void RecenterAtRaycast(Vector3 point)
     {
 
-        if (!allowClick)
-            return;
+        /* if (!allowClick)
+            return; 
 
         // using Lerp
         // we need to calculate the moving vector of the camera in order to replace the point at the center of the screen
@@ -138,21 +148,33 @@ public class CameraMovement : MonoBehaviour
         Ray ray = transform.GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
         if (Physics.Raycast(ray, out centerOfScreen, Mathf.Infinity))
         {
-            Vector3 difference_vector = centerOfScreen.point - new Vector3(transform.position.x, Y_Anchor, transform.position.z);
+            Vector3 difference_vector = centerOfScreen.point - new Vector3(transform.position.x, 0, transform.position.z);
             //Debug.Log(difference_vector + " - " + point);
-            destination = point - difference_vector;
+            Vector3 newDest = point - difference_vector;
+            newDest.y = cam_offset.y + point.y;
+            destination = newDest;
+            Debug.Log(destination-point);
         }
+    } */
+
+    public void RecenterAtPoint(Vector3 point)
+    {
+        //Vector3 newDest = point + cam_offset;
+        //Debug.Log("point" + point + " - offest_camera" + cam_offset + " - newDest" + newDest );
+        dest_look_at = point;
+
     }
 
-    private void resetDestination()
+    /* private void resetDestination()
     {
         destination = new Vector3(0, -10000, 0);
-    }
+    } */
 
-    private void OnDrawGizmos() {
+    private void OnDrawGizmos()
+    {
         // draw the destination
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(destination, 5f);
+        Gizmos.DrawSphere(dest_look_at, 5f);
 
         // draw the rotation line
         Gizmos.color = Color.blue;

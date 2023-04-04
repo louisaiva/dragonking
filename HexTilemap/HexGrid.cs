@@ -29,6 +29,13 @@ public class HexGrid : MonoBehaviour {
         GenerateGrid();
     }
 
+    private void Start() {
+
+        // recenter camera to the center of the grid
+        
+        //Camera.main.gameObject.GetComponent<CameraMovement>().RecenterAtPoint(grid_center);
+    }
+
     private void OnValidate() {
         if (Application.isPlaying)
             refreshGrid = true;
@@ -159,6 +166,10 @@ public class HexGrid : MonoBehaviour {
 
     public HexContainer GetHexAtCoord(Vector2Int coordinates){
         return transform.GetChild(coordinates.y * gridSize.x + coordinates.x).GetComponent<HexContainer>();
+    }
+
+    public Vector3 GetPositionOfCenterHex(){
+        return GetHexAtCoord(new Vector2Int(gridSize.x/2,gridSize.y/2)).GetRecenterPosition();
     }
 
     public Vector2Int[] GetRandomDifferentsPositions(int count){

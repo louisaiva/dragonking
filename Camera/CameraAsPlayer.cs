@@ -11,6 +11,10 @@ public class CameraAsPlayer : MonoBehaviour
     [ReadOnly, SerializeField] private I_Hooverable hooveredObject;
     [ReadOnly, SerializeField] private I_Clickable selectedObject;
 
+    [Header("hoovered/selected")]
+    [ReadOnly, SerializeField] private string hooveredObjectName;
+    [ReadOnly, SerializeField] private string selectedObjectName;
+
     void Start()
     {
         hooveredObject = null;
@@ -22,7 +26,9 @@ public class CameraAsPlayer : MonoBehaviour
         // hoover
         HandleHoover();
 
-        // Debug.Log("hoover : " + hooveredObject + "/ selected : " + selectedObject);
+        // maj ui
+        hooveredObjectName = (hooveredObject != null) ? hooveredObject.gameObject.name : "null";
+        selectedObjectName = (selectedObject != null) ? selectedObject.gameObject.name : "null";
     }
 
     // handlers
@@ -106,7 +112,7 @@ public class CameraAsPlayer : MonoBehaviour
             {
                 // on touche l'objet en lui meme
                 newSelectedObject = go.GetComponent<I_Clickable>();
-                objectif = go.transform.position;
+                objectif = newSelectedObject.GetRecenterPosition();
             }
 
             // on change l'objet sélectionné
@@ -138,13 +144,13 @@ public class CameraAsPlayer : MonoBehaviour
             selectedObject = null;
         }
 
-        // on fait un raycast pour obtenir la position du sol où on a cliqué
+        /* // on fait un raycast pour obtenir la position du sol où on a cliqué
         Ray castPoint = GetComponent<Camera>().ScreenPointToRay(mouse);
         RaycastHit hit;
         if (Physics.Raycast(castPoint,out hit, Mathf.Infinity))
         {   
-            camMovement.RecenterAtPoint(hit.point);
-        }
+            camMovement.RecenterAtRaycast(hit.point);
+        } */
     }
 
 }

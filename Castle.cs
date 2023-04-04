@@ -162,4 +162,9 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
         OnHooverExit();
     }
 
+    public Vector3 GetRecenterPosition()
+    {
+        return transform.position;
+    }
+
 }
