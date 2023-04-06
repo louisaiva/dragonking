@@ -17,24 +17,17 @@ public class HexGrid : MonoBehaviour {
     public Material material;
 
     // recreate grid
+    private bool regenerateGrid = true;
     private bool refreshGrid = false;
 
     // perl noise
     [Header("Helper Tools")]
     [SerializeField] private GameObject hexPerlinHandler;
+    [SerializeField] private GameObject castleGenerator;
 
+    [Header("HexGrid Modifier Parameters")]
+    public Vector2 heightScale = new Vector2(2f, 50f);
     // unity functions
-
-    private void OnEnable() {
-        GenerateGrid();
-    }
-
-    private void Start() {
-
-        // recenter camera to the center of the grid
-        
-        //Camera.main.gameObject.GetComponent<CameraMovement>().RecenterAtPoint(grid_center);
-    }
 
     private void OnValidate() {
         if (Application.isPlaying)
@@ -42,11 +35,25 @@ public class HexGrid : MonoBehaviour {
     }
 
     private void Update() {
-        if (refreshGrid && (gridSize.x > 0 && gridSize.y > 0)){
+
+        if (regenerateGrid && GetComponent<BiomeGenerator>().IsReady()){
+            init();
+        }
+        else if (refreshGrid && (gridSize.x > 0 && gridSize.y > 0)){
             
             RefreshGrid();
             refreshGrid = false;
         }
+    }
+
+    // init function
+
+    public void init(){
+        Debug.Log("generating grid");
+        GenerateGrid();
+        regenerateGrid = false;
+        castleGenerator.GetComponent<CastleGenerator>().init();
+        Camera.main.GetComponent<CameraMovement>().init();
     }
 
     // important fonctions
@@ -70,7 +77,12 @@ public class HexGrid : MonoBehaviour {
 
     private void RefreshGrid(){
 
-        float[,] heightMap = hexPerlinHandler.GetComponent<HexHeightPerlin>().GetHexHeightMap(gridSize.x,gridSize.y);
+        //float[,] heightMap = hexPerlinHandler.GetComponent<HexHeightPerlin>().GetHexHeightMap(gridSize.x,gridSize.y);
+
+        // get parameters map
+        Vector3[,] pmap = GetComponent<BiomeGenerator>().GenerateParamHexMap(gridSize.x,gridSize.y);
+
+        // refresh grid
         for (int i=0; i<transform.childCount; i++) {
             
             GameObject child = transform.GetChild(i).gameObject;
@@ -81,20 +93,19 @@ public class HexGrid : MonoBehaviour {
                 int x = i % gridSize.x;
                 int y = i / gridSize.x;
 
+                string biome = GetComponent<BiomeGenerator>().GetBiome(pmap[x,y]);
+
                 // Debug.Log($"x: {x} y: {y} - "+child.name);
 
                 HexRenderer hexRenderer = child.GetComponent<HexRenderer>();
                 hexRenderer.outerSize = outerSize;
                 hexRenderer.innerSize = innerSize;
-                hexRenderer.height = heightMap[x,y];
+                hexRenderer.height = heightScale.x + pmap[x,y].x * (heightScale.y-heightScale.x);
                 hexRenderer.isFlatTopped = isFlatTopped;
-
-                // change color of material based on height
-                /*Material mat = new Material(Shader.Find("Standard"));
-                Color color = new Color(hexRenderer.height,hexRenderer.height,hexRenderer.height);
-                mat.color = color;
-                hexRenderer.SetMaterial(mat);*/
-                hexRenderer.SetMaterial(material);
+                
+                // set material
+                Material mat = GetComponent<BiomeGenerator>().GetMaterial(biome);
+                hexRenderer.SetMaterial(mat);
 
                 // draw mesh
                 hexRenderer.DrawMesh();

@@ -26,17 +26,6 @@ public class CameraMovement : MonoBehaviour
     
     // unity functions
 
-    public void Start(){
-        // init destination
-        GameObject hexGrid = GameObject.Find("hex_grid");
-        look_at = hexGrid.GetComponent<HexGrid>().GetPositionOfCenterHex();
-
-        // init camera
-        LoadView(View.close);
-        RecalculateOffset();
-
-    }
-
     public void Update()
     {
 
@@ -81,6 +70,19 @@ public class CameraMovement : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(dest_look_at, 2f);
     }
+
+    // init function
+
+    public void init(){
+        // init destination
+        GameObject hexGrid = GameObject.Find("hex_grid");
+        look_at = hexGrid.GetComponent<HexGrid>().GetPositionOfCenterHex();
+
+        // init camera
+        LoadView(View.close);
+        RecalculateOffset();
+    }
+
 
     // handling things
 

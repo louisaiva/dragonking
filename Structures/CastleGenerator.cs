@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class CastleGenerator : MonoBehaviour
 {
+    // main
+    private bool initied = false;
+
     // castles
     [SerializeField] private GameObject castleFBX;
     [SerializeField] private int nombreCastles = 10;
 
-    //[SerializeField] private GameObject castleTest;
     private List<Castle> castles = new List<Castle>();
 
     // hex grid
@@ -18,6 +20,8 @@ public class CastleGenerator : MonoBehaviour
     // material
     [ReadOnly,SerializeField] private Material matWall;
 
+    // unity functions
+
     void Start()
     {
         // materials
@@ -25,6 +29,21 @@ public class CastleGenerator : MonoBehaviour
 
         // hex grid
         grid = hexGrid.GetComponent<HexGrid>();
+    }
+
+    public void Update()
+    {
+        if (!initied) return;
+
+        if (castles.Count < nombreCastles)
+        {
+            GenerateCastleAtCoord(grid.GetRandomPosition());
+        }
+    }
+
+    // init function
+
+    public void init(){
 
         // castle test
         GenerateCastleAtCoord(Vector2Int.zero,"KING CASTLE");
@@ -37,7 +56,11 @@ public class CastleGenerator : MonoBehaviour
         {
             GenerateCastleAtCoord(positions[i]);
         }
+
+        initied = true;
     }
+
+    // main functions
 
     public void GenerateCastleAtPos(float x, float z,string? n = null,Color? c = null)
     {
@@ -50,14 +73,6 @@ public class CastleGenerator : MonoBehaviour
     {
         GameObject castle = CreateCastle(n,c);
         grid.GetHexAtCoord(pos).Add(castle);
-    }
-
-    public void Update()
-    {
-        if (castles.Count < nombreCastles)
-        {
-            GenerateCastleAtCoord(grid.GetRandomPosition());
-        }
     }
 
     // helper functions

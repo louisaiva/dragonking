@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Newtonsoft.Json;
 using System.Linq;
 
@@ -13,7 +14,9 @@ struct BiomesConfiguration{
 
     public Dictionary<string,Color> colors;
 
-    public void LoadColors(){
+    public Dictionary<string,Material> materials;
+
+    public void LoadColors(Material mat){
         colors = new Dictionary<string, Color>();
 
         foreach (KeyValuePair<string,string> entry in hexcolors){
@@ -21,10 +24,19 @@ struct BiomesConfiguration{
             ColorUtility.TryParseHtmlString(entry.Value,out c);
             colors[entry.Key] = c;
         }
+
+        // create materials with colors
+        materials = new Dictionary<string, Material>();
+        foreach (KeyValuePair<string,Color> entry in colors){
+            Material m = new Material(mat);
+            m.color = entry.Value;
+            materials[entry.Key] = m;
+        }
     }
 
     public void EraseColors(){
         colors = new Dictionary<string, Color>();
+        materials = new Dictionary<string, Material>();
     }
 
 }
@@ -98,10 +110,23 @@ public class BiomeGenerator : MonoBehaviour
     public GameObject quad_rain;
     public GameObject quad_temp;
     public GameObject quad;
+    public GameObject minimap;
 
     // utils
     private bool regenerate = false;
     BiomesStats stats;
+    private bool pmaps_ready = false;
+    public Material main_mat;
+
+    // we use the "17 points technique" to get the height of a hexagon from the height map
+    private readonly int[] hex_x_points = new int[17] {0,-2,-1,0,1,2,-2,-1,0,1,2,-2,-1,0,1,2,0};
+    private readonly int[] hex_y_points = new int[17] {0,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4};
+
+    // pmaps
+    private float[,] hmap;
+    private float[,] rmap;
+    private float[,] tmap;
+    Vector3[,] bmap;
 
 
     // unity functions
@@ -140,6 +165,7 @@ public class BiomeGenerator : MonoBehaviour
         if (regenerate){
             regenerate = false;
             GenerateBiomes();
+            GetComponent<HexGrid>().Refresh();
         }
     }
 
@@ -148,9 +174,11 @@ public class BiomeGenerator : MonoBehaviour
     private void GenerateBiomes() {
         
         // pmaps
-        float[,] hmap = GenerateMap(scales.x,seed.x);
-        float[,] rmap = GenerateMap(scales.y,seed.y);
-        float[,] tmap = GenerateMap(scales.z,seed.z);
+        hmap = GenerateMap(scales.x,seed.x);
+        rmap = GenerateMap(scales.y,seed.y);
+        tmap = GenerateMap(scales.z,seed.z);
+
+        pmaps_ready = true;
 
         // textures 
         GenerateTexture(hmap, quad_height, new Vector3(.5f,1,.5f));
@@ -158,7 +186,10 @@ public class BiomeGenerator : MonoBehaviour
         GenerateTexture(tmap, quad_temp, new Vector3(1,.5f,.5f));
 
         // bmap
-        GenerateBiomeTexture(hmap,rmap,tmap, quad);
+        Texture2D texture = GenerateBiomeTexture(hmap,rmap,tmap, quad);
+
+        // minimap
+        minimap.GetComponent<RawImage>().texture = texture;
     }
 
     private float[,] GenerateMap(float sc,float seed) {
@@ -178,20 +209,55 @@ public class BiomeGenerator : MonoBehaviour
         return map;
     }
 
-    private float[,] ComputeBiomes(float[,] hmap, float[,] rmap, float[,] tmap) {
+    // HEXS
 
-        // this function simply add each pmap
 
-        float[,] bmap = new float[width, height];
+    public Vector3[,] GenerateParamHexMap(int? w=null, int? h=null) {
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                bmap[x,y] = (hmap[x,y] + rmap[x,y] + tmap[x,y]) / 3;
+        // convert the height map to a hex height map
+
+        int hexGrid_width = w??((int)width/5);
+        int hexGrid_height = h??((int)height/5);
+
+        bmap = new Vector3[hexGrid_width, hexGrid_height];
+
+        // we set the offset and the padding to get the top point of each hexagon
+        Vector2Int hex_offset = new Vector2Int(2,0);
+        Vector2Int hex_padding = new Vector2Int(4,3);
+
+        for (int y = 0; y < hexGrid_height; y++) {
+            for (int x = 0; x < hexGrid_width; x++) {
+
+                // we get the top point of the hexagon
+                int row_x_offset = (y%2 == 0) ? 0 : 2;
+                Vector2Int hexTopPoint = new Vector2Int(x*hex_padding.x + hex_offset.x+row_x_offset, y*hex_padding.y + hex_offset.y);
+
+                // we get the parameters of the hexagon
+                bmap[x, y] = GetParamHex(hexTopPoint);
             }
         }
 
         return bmap;
     }
+
+    private Vector3 GetParamHex(Vector2Int hexTopPoint){
+
+        Vector3 param = new Vector3(0,0,0);
+        for (int i = 0; i < 17; i++){
+            // height
+            param.x += hmap[hexTopPoint.x + hex_x_points[i], hexTopPoint.y + hex_y_points[i]];
+
+            // rain
+            param.y += rmap[hexTopPoint.x + hex_x_points[i], hexTopPoint.y + hex_y_points[i]];
+
+            // temp
+            param.z += tmap[hexTopPoint.x + hex_x_points[i], hexTopPoint.y + hex_y_points[i]];
+        }
+
+        // and we divide by 17 to get the average param
+        return param /= 17;
+    }
+
 
     // helper functions
 
@@ -199,7 +265,7 @@ public class BiomeGenerator : MonoBehaviour
         json_conf = System.IO.File.ReadAllText(p);
         Debug.Log("Loaded biomes settings from " + p);
         BiomesConfiguration c = JsonConvert.DeserializeObject<BiomesConfiguration>(json_conf);
-        c.LoadColors();
+        c.LoadColors(main_mat);
         return c;
     }
 
@@ -212,6 +278,10 @@ public class BiomeGenerator : MonoBehaviour
 
     public void ReSeed(){
         seed = new Vector3(Random.Range(-500000,500000),Random.Range(-500000,500000),Random.Range(-500000,500000));
+    }
+
+    public bool IsReady(){
+        return pmaps_ready;
     }
 
     // texture generation
@@ -246,14 +316,10 @@ public class BiomeGenerator : MonoBehaviour
                 Vector3 param = new Vector3(hmap[x,y],rmap[x,y],tmap[x,y]);
                 
                 // get the biome name
-                string name = GetBiomeName(param);
-                
-                if (name == "error" || name == "") {
-                    Debug.Log("error("+name+"): " + param);
-                }
+                string name = GetBiome(param);
 
                 // set the pixel
-                texture.SetPixel(x, y, GetBiomeColor(name));
+                texture.SetPixel(x, y, GetColor(name));
                 stats.add(name);
             }
         }
@@ -265,7 +331,7 @@ public class BiomeGenerator : MonoBehaviour
 
     }
 
-    private string GetBiomeName(Vector3 param) {
+    public string GetBiome(Vector3 param) {
 
         //Debug.Log("param: " + param);
 
@@ -286,6 +352,10 @@ public class BiomeGenerator : MonoBehaviour
             }
         }
         if (name != "/") {
+            if (name == "") {
+                Debug.Log("error("+name+"): " + param);
+                return "error";
+            }
             return name;
         }
 
@@ -309,10 +379,16 @@ public class BiomeGenerator : MonoBehaviour
         return "error";
     }
 
-    private Color GetBiomeColor(string name) {
+    private Color GetColor(string name) {
 
         // get the biome color
         return conf.colors[name];
+    }
+
+    public Material GetMaterial(string name) {
+
+        // get the biome material
+        return conf.materials[name];
     }
 
 }
