@@ -34,20 +34,18 @@ public class HexHeightPerlin : MonoBehaviour {
     private void Start() {
         
         ReSeed();
-        quad.GetComponent<MeshRenderer>().material.mainTexture = texture;
+        // quad.GetComponent<MeshRenderer>().material.mainTexture = texture;
     }
 
     private void OnValidate() {
         
-        GenerateNoise();
-        hexGrid.GetComponent<HexGrid>().Refresh();
-        //quad.GetComponent<MeshRenderer>().material.mainTexture = texture;
-    }
-
-    private void Update() {
         if (reSeed) {
             reSeed = false;
             ReSeed();
+        }
+        else {
+            GenerateNoise();
+            hexGrid.GetComponent<HexGrid>().Refresh();
         }
     }
 

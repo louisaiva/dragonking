@@ -1,0 +1,36 @@
+{   
+    "min_height":
+    {
+        "sea":0.0,
+        "/":0.4,
+        "mountains":0.75
+    },
+
+    "hexcolors":
+    {
+        "sea":"#0000ff",
+        "mountains":"#000000",
+        "tundra":"#00f6ed",
+        "frozen desert":"#d1cfe2",
+        "ocyan":"#261447",
+        "golems land":"#9cadce",
+        "enchanted forest":"#f7b1ab",
+        "red desert":"#a44200",
+        "plains":"#edfbc1",
+        "hills":"#9cc5a1",
+        "red forest":"#ff3864",
+        "swamp":"#216869",
+        "desert":"#eeb902",
+        "lakes":"#9dacff",
+        "forest":"#293f14",
+        "humid lands":"#49a078",
+        "jungle":"#31d843",
+        "savanna":"#f4b266",
+        "tropical forest":"#38a700",
+        "volcanic lands":"#474647",
+        "error":"#ff0000"
+    },
+
+    "colors":
+    {}
+}

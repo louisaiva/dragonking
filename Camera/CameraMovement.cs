@@ -12,12 +12,9 @@ public class CameraMovement : MonoBehaviour
     [SerializeField] private float zoomSpeed = 5f;
     [SerializeField] private float rotationSpeed = 30f;
 
-    [Header("Depreciated parameters")]
-    [SerializeField] private float ratioSpdZoom = 5f;
-    [SerializeField] private float ratioEnhancer = 0.04f;
-
-    [Header("Camera rotation")] 
+    [Header("Camera rotation")]
     [SerializeField] private bool autoRotating = false;
+    [ReadOnly,SerializeField] private float autoRotationSpeed = 20f;
 
     [Header("Camera destination")]
     [SerializeField] private float cam_angle_Y = 45f;
@@ -56,7 +53,7 @@ public class CameraMovement : MonoBehaviour
 
         // rotate with Q,D
         if (autoRotating)
-            cam_angle_XZ += 20 * Time.deltaTime;
+            cam_angle_XZ += autoRotationSpeed * Time.deltaTime;
         else
             HandleRotation();
 
@@ -78,38 +75,14 @@ public class CameraMovement : MonoBehaviour
 
     }
 
-    // handling things
-
-    public void HandleArchaicMovement()
+    private void OnDrawGizmos()
     {
-        Vector2 moveInput = inputHandler.GetComponent<InputHandler>().moveInput();
-
-        Vector3 movement = new Vector3(moveInput.x,0,moveInput.y);
-
-        if (movement != new Vector3(0f, 0f, 0f)){
-            movement.Normalize();
-
-            int maxSpeed = 150;
-
-            float fov = transform.GetComponent<Camera>().fieldOfView;
-            float ratio = ratioSpdZoom-fov*ratioEnhancer;
-
-            if (ratio < 0.5f)
-                ratio = 0.5f;
-
-            float speed = fov / ratio;
-
-            if (speed > maxSpeed)
-                speed = maxSpeed;
-
-            //Debug.Log(speed);
-
-            transform.position = Vector3.Lerp(transform.position, transform.position+movement, speed * Time.deltaTime);
-
-            // reset the destination
-            dest_look_at = transform.position - cam_offset;
-        }
+        // draw the destination
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(dest_look_at, 2f);
     }
+
+    // handling things
 
     public void HandleRotation()
     {
@@ -119,28 +92,6 @@ public class CameraMovement : MonoBehaviour
         if (rotation != 0)
         {
             cam_angle_XZ += rotation;
-        }
-    }
-
-    public void HandleZoomPerspectiveFOV(float zoom)
-    {
-        float finalZoom = transform.GetComponent<Camera>().fieldOfView;
-        float ratio = Mathf.Sign(zoom) * zoomSpeed * -1;
-        finalZoom += ratio;
-
-        if (finalZoom <= 10)
-        {
-            finalZoom = 10;
-        }
-        else if (finalZoom >= 100)
-        {
-            finalZoom = 100;
-        }
-
-        if (finalZoom != transform.GetComponent<Camera>().fieldOfView)
-        {
-            transform.GetComponent<Camera>().fieldOfView = finalZoom;
-
         }
     }
 
@@ -196,13 +147,6 @@ public class CameraMovement : MonoBehaviour
         cam_offset = new Vector3(dx, dy, dz);
         //transform.position = look_at + cam_offset;
         
-    }
-
-    private void OnDrawGizmos()
-    {
-        // draw the destination
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(dest_look_at, 2f);
     }
 
     public void LoadView(Vector3 view)
