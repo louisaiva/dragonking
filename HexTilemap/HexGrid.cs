@@ -12,7 +12,6 @@ public class HexGrid : MonoBehaviour {
     [Header("Tile Settings")]
     public float outerSize = 1f;
     public float innerSize = 0.5f;
-    public Vector2 height = new Vector2(0.5f,5f);
     public bool isFlatTopped = false;
     public Material material;
 
@@ -24,9 +23,6 @@ public class HexGrid : MonoBehaviour {
     [Header("Helper Tools")]
     [SerializeField] private GameObject hexPerlinHandler;
     [SerializeField] private GameObject castleGenerator;
-
-    [Header("HexGrid Modifier Parameters")]
-    public Vector2 heightScale = new Vector2(2f, 50f);
     // unity functions
 
     private void OnValidate() {
@@ -77,8 +73,6 @@ public class HexGrid : MonoBehaviour {
 
     private void RefreshGrid(){
 
-        //float[,] heightMap = hexPerlinHandler.GetComponent<HexHeightPerlin>().GetHexHeightMap(gridSize.x,gridSize.y);
-
         // get parameters map
         Vector3[,] pmap = GetComponent<BiomeGenerator>().GenerateParamHexMap(gridSize.x,gridSize.y);
 
@@ -100,8 +94,10 @@ public class HexGrid : MonoBehaviour {
                 HexRenderer hexRenderer = child.GetComponent<HexRenderer>();
                 hexRenderer.outerSize = outerSize;
                 hexRenderer.innerSize = innerSize;
-                hexRenderer.height = heightScale.x + pmap[x,y].x * (heightScale.y-heightScale.x);
                 hexRenderer.isFlatTopped = isFlatTopped;
+
+                // set height
+                hexRenderer.height = GetComponent<BiomeGenerator>().GetFinalHeight(pmap[x,y]);
                 
                 // set material
                 Material mat = GetComponent<BiomeGenerator>().GetMaterial(biome);

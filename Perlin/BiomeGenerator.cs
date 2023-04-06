@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -90,17 +91,22 @@ public class BiomeGenerator : MonoBehaviour
     public bool reSeed = false;
     public int width = 256;
     public int height = 256;
-    [SerializeField] private Vector3 scales = new Vector3(3,10,10);
+    [SerializeField] private Vector3 scales = new Vector3(5,0.5f,0.5f);
     public float global_scale = 1f;
     public Vector2 offset = new Vector2(0,0);
 
+    // we add again 2 perlin noise to get a more realistic height map
+    [Header("Earth Parameters")]
+    [ReadOnly, SerializeField] private float earth_seed = 0f;
+    public float earth_size = 5;
+    public float earth_scale = 0.1f;
+    public float max_height = 200;
+
     // conf
-    [Header("Biomes Configuration")]
-    [ReadOnly, SerializeField] string json_conf;
+    private string json_conf;
     private BiomesConfiguration conf;
     private Texture2D biomesPNG;
     private Dictionary<string,Color> colors = new Dictionary<string, Color>();
-
     private string biome_settings_json_path = "Assets/Scripts/JSON/biomes_conf.json";
     private string biome_png_path = "px/biomes";
 
@@ -145,7 +151,7 @@ public class BiomeGenerator : MonoBehaviour
         // PERLIN NOISE
 
         ReSeed();
-        GenerateBiomes();
+        LoadEarth(EarthModel.ultrasmall);
 
         // stats
         Debug.Log(stats.stats());
@@ -173,8 +179,9 @@ public class BiomeGenerator : MonoBehaviour
 
     private void GenerateBiomes() {
         
+
         // pmaps
-        hmap = GenerateMap(scales.x,seed.x);
+        hmap = GenerateMap(scales.x,seed.x,true);
         rmap = GenerateMap(scales.y,seed.y);
         tmap = GenerateMap(scales.z,seed.z);
 
@@ -192,7 +199,7 @@ public class BiomeGenerator : MonoBehaviour
         minimap.GetComponent<RawImage>().texture = texture;
     }
 
-    private float[,] GenerateMap(float sc,float seed) {
+    private float[,] GenerateMap(float sc,float seed,bool use_earth=false) {
 
         float scale = sc * global_scale;
 
@@ -202,7 +209,23 @@ public class BiomeGenerator : MonoBehaviour
             for (int y = 0; y < height; y++) {
                 float xCoord = (float) (x-width/2) / width * scale + seed + (offset.x*scale);
                 float yCoord = (float) (y-height/2) / height * scale + seed + (offset.y*scale);
-                map[x,y] = Mathf.PerlinNoise(xCoord, yCoord);
+
+                if (use_earth){
+
+                    float e_scale = earth_scale * global_scale;
+
+                    float xEarthCoord = (float) (x-width/2) / width * e_scale + earth_seed + (offset.x*e_scale);
+                    float yEarthCoord = (float) (y-height/2) / height * e_scale + earth_seed + (offset.y*e_scale);
+
+                    if (Vector2.Distance(new Vector2(xEarthCoord,yEarthCoord),new Vector2(earth_seed,earth_seed)) > earth_size/2) {
+                        map[x,y] = 0;
+                    } else {
+                        map[x,y] = Mathf.PerlinNoise(xCoord, yCoord) * (Mathf.PerlinNoise(xEarthCoord, yEarthCoord));
+                    }
+
+                } else {
+                    map[x,y] = Mathf.PerlinNoise(xCoord, yCoord);
+                }
             }
         }
 
@@ -210,7 +233,6 @@ public class BiomeGenerator : MonoBehaviour
     }
 
     // HEXS
-
 
     public Vector3[,] GenerateParamHexMap(int? w=null, int? h=null) {
 
@@ -220,6 +242,7 @@ public class BiomeGenerator : MonoBehaviour
         int hexGrid_height = h??((int)height/5);
 
         bmap = new Vector3[hexGrid_width, hexGrid_height];
+        // final_hmap = new float[hexGrid_width, hexGrid_height];
 
         // we set the offset and the padding to get the top point of each hexagon
         Vector2Int hex_offset = new Vector2Int(2,0);
@@ -233,16 +256,17 @@ public class BiomeGenerator : MonoBehaviour
                 Vector2Int hexTopPoint = new Vector2Int(x*hex_padding.x + hex_offset.x+row_x_offset, y*hex_padding.y + hex_offset.y);
 
                 // we get the parameters of the hexagon
-                bmap[x, y] = GetParamHex(hexTopPoint);
+                bmap[x, y] = GetParamHex(hexTopPoint,new Vector2Int(x,y));
             }
         }
 
         return bmap;
     }
 
-    private Vector3 GetParamHex(Vector2Int hexTopPoint){
+    private Vector3 GetParamHex(Vector2Int hexTopPoint, Vector2Int hexCoord) {
 
         Vector3 param = new Vector3(0,0,0);
+        float tot_height = 0;
         for (int i = 0; i < 17; i++){
             // height
             param.x += hmap[hexTopPoint.x + hex_x_points[i], hexTopPoint.y + hex_y_points[i]];
@@ -257,7 +281,6 @@ public class BiomeGenerator : MonoBehaviour
         // and we divide by 17 to get the average param
         return param /= 17;
     }
-
 
     // helper functions
 
@@ -277,11 +300,22 @@ public class BiomeGenerator : MonoBehaviour
     }
 
     public void ReSeed(){
-        seed = new Vector3(Random.Range(-500000,500000),Random.Range(-500000,500000),Random.Range(-500000,500000));
+        seed = new Vector3(UnityEngine.Random.Range(-500000,500000),UnityEngine.Random.Range(-500000,500000),UnityEngine.Random.Range(-500000,500000));
+        earth_seed = UnityEngine.Random.Range(-500000,500000);
     }
 
     public bool IsReady(){
         return pmaps_ready;
+    }
+
+    public void LoadEarth(float[] model){
+
+        if (model.Length != 5) return;
+
+        scales = new Vector3(model[0],model[1],model[2]);
+        earth_scale = model[3];
+        earth_size = model[4];
+        GenerateBiomes();
     }
 
     // texture generation
@@ -331,20 +365,24 @@ public class BiomeGenerator : MonoBehaviour
 
     }
 
+    // getters
+
     public string GetBiome(Vector3 param) {
 
         //Debug.Log("param: " + param);
 
         // get the biome name
         string name = "";
-
-        if (param.x <= 0.0f) {
-            param.x = 0.001f;
-        }
         
+        float hauteur = param.x;
+
+        if (hauteur <= 0.0f) {
+            hauteur = 0.001f;
+        }
+
         // height
         foreach (KeyValuePair<string,float> entry in conf.min_height) {
-            if (param.x >= entry.Value) { 
+            if (hauteur >= entry.Value) { 
                 name = entry.Key;
             }
             else {
@@ -391,4 +429,24 @@ public class BiomeGenerator : MonoBehaviour
         return conf.materials[name];
     }
 
+    public float GetFinalHeight(Vector3 param) {
+        
+        float nor_height = param.x - conf.min_height["/"];
+        float h = nor_height * max_height;
+
+        if(h < 0) h = 0;
+
+        return h;
+    }
+
+}
+
+
+public static class EarthModel
+{
+    // earth models
+    // each vector contains 3 parameters: scale_params_perlin_noise,earth_scale,earth_size
+    public static float[] normal = new float[5] {5,0.5f,0.5f,1,5};
+    public static float[] small = new float[5] {5,0.5f,0.5f,1,2};
+    public static float[] ultrasmall = new float[5] {5,0.5f,0.5f,1,1};
 }

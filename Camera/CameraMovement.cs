@@ -111,9 +111,9 @@ public class CameraMovement : MonoBehaviour
         {
             finalZoom = 10;
         }
-        else if (finalZoom >= 300)
+        else if (finalZoom >= 600)
         {
-            finalZoom = 300;
+            finalZoom = 600;
         }
 
         if (finalZoom != cam_distance)

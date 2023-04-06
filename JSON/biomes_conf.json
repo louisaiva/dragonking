@@ -2,8 +2,8 @@
     "min_height":
     {
         "sea":0.0,
-        "/":0.4,
-        "mountains":0.75
+        "/":0.2,
+        "mountains":0.7
     },
 
     "hexcolors":
