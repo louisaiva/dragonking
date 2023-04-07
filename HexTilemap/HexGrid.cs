@@ -11,7 +11,7 @@ public class HexGrid : MonoBehaviour {
 
     [Header("Tile Settings")]
     public float outerSize = 1f;
-    public float innerSize = 0.5f;
+    // public float innerSize = 0.5f;
     public bool isFlatTopped = false;
     public Material material;
 
@@ -21,7 +21,7 @@ public class HexGrid : MonoBehaviour {
 
     // perl noise
     [Header("Helper Tools")]
-    [SerializeField] private GameObject hexPerlinHandler;
+    // [SerializeField] private GameObject hexPerlinHandler;
     [SerializeField] private GameObject castleGenerator;
     // unity functions
 
@@ -93,7 +93,7 @@ public class HexGrid : MonoBehaviour {
 
                 HexRenderer hexRenderer = child.GetComponent<HexRenderer>();
                 hexRenderer.outerSize = outerSize;
-                hexRenderer.innerSize = innerSize;
+                // hexRenderer.innerSize = innerSize;
                 hexRenderer.isFlatTopped = isFlatTopped;
 
                 // set height
