@@ -5,29 +5,47 @@ using UnityEngine;
 public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
 {
     private HexRenderer renderer;
-
-    // hexagon data
-    [SerializeField] private float height; // height ABOVE the ground (not the height of the hexagon) WARNING NOT THE SAME AS HEIGHT IN HEXRENDERER
+    //private GameObject bGenerator;
+    private BiomesConfiguration bConf;
 
     // unity functions
 
     public void Awake()
     {
         renderer = GetComponent<HexRenderer>();
-        height = renderer.height/2;
     }
 
-    public void Update()
-    {
-        MAJ_HexData();
+    // biome functions
 
-        if (transform.childCount > 0)
-        {
-            foreach (Transform child in transform)
-            {
-                child.transform.localPosition = new Vector3(0, height, 0);
+    public void SetBiome(string? b=null)
+    {
+        if (b == null)
+            return;
+
+        renderer.biome = b;
+
+        /* // get biome generator
+        if (bConf.loaded != true)
+            return; */
+
+        // create children based on biome
+
+        // clear children
+        Clear();
+
+        // create children based on biome
+        if (b == "forest"){
+            // create trees
+            int nb_trees = Random.Range(0, 4);
+            for (int i = 0; i < nb_trees; i++){
+                string tree_name = "tree_sapin" + Random.Range(1, 3);
+                GameObject tree = Instantiate(Resources.Load("fbx/"+ tree_name)) as GameObject;
+                GetComponent<HexContainer>().Add(tree);
             }
         }
+
+        // Debug.Log("biome conf data elements : " + bConf.data_elements[renderer.biome]);
+
     }
 
     // important functions
@@ -35,16 +53,27 @@ public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
     public void Add(GameObject obj)
     {
         obj.transform.parent = transform;
-        obj.transform.localPosition = new Vector3(0, height, 0);
+
+        float radius = renderer.outerSize* (3f/4f);
+        //Debug.Log(renderer.outerSize + " / " + radius);
+
+        float x = Random.Range(-radius, radius);
+        float z = Random.Range(-radius, radius);
+        obj.transform.localPosition = new Vector3(x, renderer.height, z);
     }
 
-    // helper functions
-
-    public void MAJ_HexData()
+    public void AddCenter(GameObject obj)
     {
-        if (renderer.height != height*2)
+        obj.transform.parent = transform;
+        obj.transform.localPosition = new Vector3(0, renderer.height, 0);
+        
+    }
+
+    public void Clear()
+    {
+        foreach (Transform child in transform)
         {
-            height = renderer.height/2;
+            Destroy(child.gameObject);
         }
     }
 
@@ -113,5 +142,12 @@ public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
     public Vector3 GetRecenterPosition()
     {
         return renderer.GetTopMidPosition();
+    }
+
+    // helpers
+
+    public void SetConf(BiomesConfiguration conf)
+    {
+        bConf = conf;
     }
 }

@@ -46,7 +46,6 @@ public class HexRenderer : MonoBehaviour {
     private MeshFilter m_meshFilter;
     private MeshRenderer m_meshRenderer;
 
-
     // material
     public Material material;
 
@@ -55,9 +54,11 @@ public class HexRenderer : MonoBehaviour {
     public float height = 1f;
     public bool isFlatTopped = false;
 
+    // biome
+    [ReadOnly] public string biome = "";
+
     // recreate Mesh
     private bool recreateMesh = false;
-    private int lod = 0;
 
     // unity functions
 
@@ -73,7 +74,7 @@ public class HexRenderer : MonoBehaviour {
         m_meshRenderer.material = material; 
     }
 
-    private void OnEnable() {
+    private void OnEnable() { 
         DrawMesh();
     }
 
@@ -91,26 +92,28 @@ public class HexRenderer : MonoBehaviour {
 
     // important fonctions
 
-    public void setLOD(int lod){
-        this.lod = lod;
-        DrawMesh();
-    }
+    public void DrawMesh(int lod=0){
 
-    public void DrawMesh(){
 
-        switch (lod){
-            case 0:
-                DrawLOD1();
-                break;
-            case 1:
-                DrawLOD1();
-                break;
-            case 2:
-                DrawLOD1();
-                break;
-            default:
-                DrawLOD1();
-                break;
+        // clear mesh
+        m_mesh.Clear();
+
+        if (height == 0f){
+            DrawHex();
+        }
+        else {
+            // draw mesh
+            switch (lod){
+                case 0:
+                    DrawLOD0();
+                    break;
+                case 1:
+                    DrawLOD1();
+                    break;
+                default:
+                    DrawLOD1();
+                    break;
+            }
         }
 
         // setting the bounds of the mesh
@@ -118,39 +121,25 @@ public class HexRenderer : MonoBehaviour {
 
         // apply mesh to collider
         GetComponent<MeshCollider>().sharedMesh = m_mesh;
-
     }
 
-    private void DrawLOD2(){
+    // draw functions
 
-        // cheap way to draw a hexagon -> only 14 vertices
-
-        // create vertices
-        List<Vector3> vertices = CreateVertices(outerSize, height);
-        List<Vector2> uvs = CreateUV();
+    private void DrawHex(){
+        List<Vector3> vertices = CreateVertices(outerSize, height,true);
+        List<Vector2> uvs = CreateUV(true);
 
         // top face
         List<int> triangles = new List<int>() { 0, 2, 1, 0, 1, 6, 0, 6, 5, 0, 5, 4, 0, 4, 3, 0, 3, 2 };
-        int k = 7;
-        // bottom face
-        //triangles.AddRange(new List<int>() { 0+k, 1+k, 2+k, 0+k, 2+k, 3+k, 0+k, 3+k, 4+k, 0+k, 4+k, 5+k, 0+k, 5+k, 6+k, 0+k, 6+k, 1+k });
-
-
-        // side faces
-        for (int i=0; i<5; i++){
-            triangles.AddRange(new List<int>() { 1+i, 2+i, 1+i+k, 1+i+k, 2+i, 2+k+i });
-        }
-        triangles.AddRange(new List<int>() { 6, 1, 6+k, 6+k, 1, 1+k });
         
         // apply to mesh
         m_mesh.vertices = vertices.ToArray();
         m_mesh.triangles = triangles.ToArray();
         m_mesh.uv = uvs.ToArray();
         m_mesh.RecalculateNormals();
-
     }
 
-    private void DrawLOD1(){
+    private void DrawLOD0(){
 
         // better way to draw a hexagon -> 14*2 = 28 vertices
 
@@ -178,9 +167,40 @@ public class HexRenderer : MonoBehaviour {
 
     }
 
+    private void DrawLOD1(){
+
+        // cheap way to draw a hexagon -> only 14 vertices
+
+        // create vertices
+        List<Vector3> vertices = CreateVertices(outerSize, height);
+        List<Vector2> uvs = CreateUV();
+
+        Debug.Log(vertices.Count);
+
+        // top face
+        List<int> triangles = new List<int>() { 0, 2, 1, 0, 1, 6, 0, 6, 5, 0, 5, 4, 0, 4, 3, 0, 3, 2 };
+        int k = 7;
+        // bottom face
+        // triangles.AddRange(new List<int>() { 0+k, 1+k, 2+k, 0+k, 2+k, 3+k, 0+k, 3+k, 4+k, 0+k, 4+k, 5+k, 0+k, 5+k, 6+k, 0+k, 6+k, 1+k });
+
+
+        // side faces
+        for (int i=0; i<5; i++){
+            triangles.AddRange(new List<int>() { 1+i, 2+i, 1+i+k, 1+i+k, 2+i, 2+k+i });
+        }
+        triangles.AddRange(new List<int>() { 6, 1, 6+k, 6+k, 1, 1+k });
+        
+        // apply to mesh
+        m_mesh.vertices = vertices.ToArray();
+        m_mesh.triangles = triangles.ToArray();
+        m_mesh.uv = uvs.ToArray();
+        m_mesh.RecalculateNormals();
+
+    }
+
     // helper functions
 
-    private List<Vector3> CreateVertices(float outerRad, float height)
+    private List<Vector3> CreateVertices(float outerRad, float height,bool only_top=false)
     {
         List<Vector3> vertices = new List<Vector3>();
 
@@ -192,6 +212,9 @@ public class HexRenderer : MonoBehaviour {
         vertices.Add( GetPoint(outerRad, height, 3) );
         vertices.Add( GetPoint(outerRad, height, 4) );
         vertices.Add( GetPoint(outerRad, height, 5) );
+
+        if (only_top)
+            return vertices;
 
         // bottom vertices
         vertices.Add(new Vector3(0, 0, 0));
@@ -205,7 +228,7 @@ public class HexRenderer : MonoBehaviour {
         return vertices;
     }
 
-    private List<Vector2> CreateUV(){
+    private List<Vector2> CreateUV(bool only_top=false){
         List<Vector2> uvs = new List<Vector2>();
         uvs.Add(new Vector2(0f, 0f));
         uvs.Add(new Vector2(1, 0));
@@ -214,6 +237,10 @@ public class HexRenderer : MonoBehaviour {
         uvs.Add(new Vector2(1, 0));
         uvs.Add(new Vector2(1, 0));
         uvs.Add(new Vector2(1, 0));
+
+        if (only_top)
+            return uvs;
+
         uvs.Add(new Vector2(0f, 0f));
         uvs.Add(new Vector2(1, 0));
         uvs.Add(new Vector2(1, 0));
@@ -250,7 +277,7 @@ public class HexRenderer : MonoBehaviour {
         m_meshRenderer.material = material;
     }
 
-    public void SetColor(Color color){
+    private void SetColor(Color color){
         m_meshRenderer.material.color = color;
     }
 

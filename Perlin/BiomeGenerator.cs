@@ -7,37 +7,64 @@ using Newtonsoft.Json;
 using System.Linq;
 
 
-struct BiomesConfiguration{
+public struct BiomesConfiguration{
+
+    public bool loaded;
+
     // 1st step : height
     public Dictionary<string,float> min_height; // 0 - 10
 
     public Dictionary<string,string> hexcolors;
 
     public Dictionary<string,Color> colors;
+    public Dictionary<string,Color> colors2;
 
     public Dictionary<string,Material> materials;
+    public Dictionary<string,Material> materials2;
+
+    // biome data, elements etc
+    public Dictionary<string,List<string>> elements;
+    public Dictionary<string,List<string>> data_elements;
+    public Dictionary<string,List<float>> data_probs;
+    public Dictionary<string,List<int>> data_quants;
+
 
     public void LoadColors(Material mat){
         colors = new Dictionary<string, Color>();
+        colors2 = new Dictionary<string, Color>();
 
         foreach (KeyValuePair<string,string> entry in hexcolors){
             Color c = new Color();
             ColorUtility.TryParseHtmlString(entry.Value,out c);
             colors[entry.Key] = c;
+
+            Color c2 = new Color();
+            c2.r = c.r + UnityEngine.Random.Range(-0.1f,0.1f);
+            c2.g = c.g + UnityEngine.Random.Range(-0.1f,0.1f);
+            c2.b = c.b + UnityEngine.Random.Range(-0.1f,0.1f);
+
+            colors2[entry.Key] = c2;
         }
 
         // create materials with colors
         materials = new Dictionary<string, Material>();
+        materials2 = new Dictionary<string, Material>();
         foreach (KeyValuePair<string,Color> entry in colors){
             Material m = new Material(mat);
             m.color = entry.Value;
             materials[entry.Key] = m;
+
+            Material m2 = new Material(mat);
+            m2.color = colors2[entry.Key];
+            materials2[entry.Key] = m2;
         }
     }
 
     public void EraseColors(){
         colors = new Dictionary<string, Color>();
+        colors2 = new Dictionary<string, Color>();
         materials = new Dictionary<string, Material>();
+        materials2 = new Dictionary<string, Material>();
     }
 
 }
@@ -109,6 +136,7 @@ public class BiomeGenerator : MonoBehaviour
     private Dictionary<string,Color> colors = new Dictionary<string, Color>();
     private string biome_settings_json_path = "Assets/Scripts/JSON/biomes_conf.json";
     private string biome_png_path = "px/biomes";
+    private int alt_color_chance = 20;
 
     // visualisation
     [Header("Visualisation")]
@@ -141,7 +169,7 @@ public class BiomeGenerator : MonoBehaviour
 
         // load conf
         conf = LoadBiomesConf(biome_settings_json_path);
-        Debug.Log("conf : " + conf.colors["jungle"]);
+        // Debug.Log("conf : " + conf.colors["jungle"]);
         biomesPNG = Resources.Load<Texture2D>(biome_png_path);
 
         // stats
@@ -154,7 +182,7 @@ public class BiomeGenerator : MonoBehaviour
         LoadEarth(EarthModel.ultrasmall);
 
         // stats
-        Debug.Log(stats.stats());
+        // Debug.Log(stats.stats());
     }
 
     private void OnValidate() {
@@ -171,7 +199,7 @@ public class BiomeGenerator : MonoBehaviour
         if (regenerate){
             regenerate = false;
             GenerateBiomes();
-            GetComponent<HexGrid>().Refresh();
+            GetComponent<HexChunk>().Refresh();
         }
     }
 
@@ -179,11 +207,10 @@ public class BiomeGenerator : MonoBehaviour
 
     private void GenerateBiomes() {
         
-
         // pmaps
-        hmap = GenerateMap(scales.x,seed.x,true);
-        rmap = GenerateMap(scales.y,seed.y);
-        tmap = GenerateMap(scales.z,seed.z);
+        hmap = GenerateHexMap(scales.x,seed.x,true);
+        rmap = GenerateHexMap(scales.y,seed.y);
+        tmap = GenerateHexMap(scales.z,seed.z);
 
         pmaps_ready = true;
 
@@ -199,87 +226,77 @@ public class BiomeGenerator : MonoBehaviour
         minimap.GetComponent<RawImage>().texture = texture;
     }
 
-    private float[,] GenerateMap(float sc,float seed,bool use_earth=false) {
+    // New Hex Map Noise System
 
-        float scale = sc * global_scale;
+    private float[,] GenerateHexMap(float sc,float seed,bool use_earth=false){
+
+        //float scale = sc * global_scale;
 
         float[,] map = new float[width, height];
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                float xCoord = (float) (x-width/2) / width * scale + seed + (offset.x*scale);
-                float yCoord = (float) (y-height/2) / height * scale + seed + (offset.y*scale);
 
+
+                float multiplier = 1;
                 if (use_earth){
-
-                    float e_scale = earth_scale * global_scale;
-
-                    float xEarthCoord = (float) (x-width/2) / width * e_scale + earth_seed + (offset.x*e_scale);
-                    float yEarthCoord = (float) (y-height/2) / height * e_scale + earth_seed + (offset.y*e_scale);
-
-                    if (Vector2.Distance(new Vector2(xEarthCoord,yEarthCoord),new Vector2(earth_seed,earth_seed)) > earth_size/2) {
-                        map[x,y] = 0;
-                    } else {
-                        map[x,y] = Mathf.PerlinNoise(xCoord, yCoord) * (Mathf.PerlinNoise(xEarthCoord, yEarthCoord));
-                    }
-
-                } else {
-                    map[x,y] = Mathf.PerlinNoise(xCoord, yCoord);
+                    multiplier = HexNoiseCoord(x,y,earth_scale,earth_seed,true);
                 }
+
+                // apply multiplier
+                map[x,y] = HexNoiseCoord(x,y,sc,seed)*multiplier;
             }
         }
 
         return map;
+
     }
+
+    private float HexNoiseCoord(int hex_x, int hex_y,float sc,float seed,bool use_earth=false){
+
+        float scale = sc * global_scale;
+
+        float x = hex_x * GetComponent<HexChunk>().Xgrider + (hex_y%2==0?0:GetComponent<HexChunk>().Xgrider/2);
+        float y = hex_y * GetComponent<HexChunk>().Ygrider;
+
+        float xCoord = (float) (x-width/2) / width * scale + seed + (offset.x*scale);
+        float yCoord = (float) (y-height/2) / height * scale + seed + (offset.y*scale);
+
+        if (use_earth){
+
+            // we use the distance to the center of the earth to get a more realistic earth
+            float xcoo = (float) (hex_x-width/2) / width * scale + seed + (offset.x*scale);
+            float ycoo = (float) (hex_y-height/2) / height * scale + seed + (offset.y*scale);
+
+            if(Vector2.Distance(new Vector2(xCoord,yCoord),new Vector2(seed,seed)) > earth_size/2)
+                return 0;
+        }
+
+        return Mathf.PerlinNoise(xCoord, yCoord);
+
+    }
+
 
     // HEXS
 
     public Vector3[,] GenerateParamHexMap(int? w=null, int? h=null) {
 
-        // convert the height map to a hex height map
+        // combines the 3 maps to get the parameters of each hexagon
 
-        int hexGrid_width = w??((int)width/5);
-        int hexGrid_height = h??((int)height/5);
+        int hexGrid_width = w??width;
+        int hexGrid_height = h??height;
 
         bmap = new Vector3[hexGrid_width, hexGrid_height];
-        // final_hmap = new float[hexGrid_width, hexGrid_height];
-
-        // we set the offset and the padding to get the top point of each hexagon
-        Vector2Int hex_offset = new Vector2Int(2,0);
-        Vector2Int hex_padding = new Vector2Int(4,3);
 
         for (int y = 0; y < hexGrid_height; y++) {
             for (int x = 0; x < hexGrid_width; x++) {
 
-                // we get the top point of the hexagon
-                int row_x_offset = (y%2 == 0) ? 0 : 2;
-                Vector2Int hexTopPoint = new Vector2Int(x*hex_padding.x + hex_offset.x+row_x_offset, y*hex_padding.y + hex_offset.y);
-
                 // we get the parameters of the hexagon
-                bmap[x, y] = GetParamHex(hexTopPoint,new Vector2Int(x,y));
+                bmap[x, y] = new Vector3(hmap[x, y], rmap[x, y], tmap[x, y]);
             }
         }
 
         return bmap;
-    }
-
-    private Vector3 GetParamHex(Vector2Int hexTopPoint, Vector2Int hexCoord) {
-
-        Vector3 param = new Vector3(0,0,0);
-        float tot_height = 0;
-        for (int i = 0; i < 17; i++){
-            // height
-            param.x += hmap[hexTopPoint.x + hex_x_points[i], hexTopPoint.y + hex_y_points[i]];
-
-            // rain
-            param.y += rmap[hexTopPoint.x + hex_x_points[i], hexTopPoint.y + hex_y_points[i]];
-
-            // temp
-            param.z += tmap[hexTopPoint.x + hex_x_points[i], hexTopPoint.y + hex_y_points[i]];
-        }
-
-        // and we divide by 17 to get the average param
-        return param /= 17;
     }
 
     // helper functions
@@ -289,6 +306,7 @@ public class BiomeGenerator : MonoBehaviour
         Debug.Log("Loaded biomes settings from " + p);
         BiomesConfiguration c = JsonConvert.DeserializeObject<BiomesConfiguration>(json_conf);
         c.LoadColors(main_mat);
+        c.loaded = true;
         return c;
     }
 
@@ -426,7 +444,10 @@ public class BiomeGenerator : MonoBehaviour
     public Material GetMaterial(string name) {
 
         // get the biome material
-        return conf.materials[name];
+        if (UnityEngine.Random.Range(0, 100) < alt_color_chance) {
+            return conf.materials2[name];
+        }
+        return conf.materials[name];        
     }
 
     public float GetFinalHeight(Vector3 param) {
@@ -439,6 +460,10 @@ public class BiomeGenerator : MonoBehaviour
         return h;
     }
 
+    public BiomesConfiguration GetConf() {
+        return conf;
+    }
+
 }
 
 
@@ -449,4 +474,5 @@ public static class EarthModel
     public static float[] normal = new float[5] {5,0.5f,0.5f,1,5};
     public static float[] small = new float[5] {5,0.5f,0.5f,1,2};
     public static float[] ultrasmall = new float[5] {5,0.5f,0.5f,1,1};
+    public static float[] test = new float[5] {5,0.5f,0.5f,0.3f,0.5f};
 }

@@ -32,5 +32,88 @@
     },
 
     "colors":
-    {}
+    {},
+
+    "elements":
+    {
+        "epicea" : ["tree_1","tree_2"],
+        "sapin" : ["tree_sapin_1","tree_sapin_2","tree_sapin_3"],
+        "rock" : ["rock_1","rock_2","rock_3","rock_4"],
+        "grass" : ["grass_1","grass_2"]
+    },
+
+    "data_el":
+    {
+        "sea":[],
+        "mountains":["rock","sapin"],
+        "tundra":[],
+        "frozen desert":[],
+        "ocyan":[],
+        "golems land":["rock","grass"],
+        "enchanted forest":["grass","sapin"],
+        "red desert":["rock","epicea"],
+        "plains":["grass","rock","epicea"],
+        "hills":["grass","rock","epicea"],
+        "red forest":["grass","rock","epicea"],
+        "swamp":["grass","epicea"],
+        "desert":["rock"],
+        "lakes":["grass","epicea","sapin"],
+        "forest":["grass","rock","sapin"],
+        "humid lands":[],
+        "jungle":[],
+        "savanna":["rock","grass"],
+        "tropical forest":["grass","rock","sapin"],
+        "volcanic lands":[],
+        "error":[]
+    },
+
+    "data_prob":
+    {
+        "sea":[],
+        "mountains":[0.1,0.5],
+        "tundra":[],
+        "frozen desert":[],
+        "ocyan":[],
+        "golems land":[0.8,0.05],
+        "enchanted forest":[0.05,0.8],
+        "red desert":[0.02,0.005],
+        "plains":[0.8,0.2,0.1],
+        "hills":[0.5,0.2,0.5],
+        "red forest":[0.05,0.05,0.8],
+        "swamp":[0.8,0.05],
+        "desert":[0.02],
+        "lakes":[0.5,0.2,0.2],
+        "forest":[0.05,0.05,0.8],
+        "humid lands":[],
+        "jungle":[],
+        "savanna":[0.02,0.5],
+        "tropical forest":[0.05,0.05,0.8],
+        "volcanic lands":[],
+        "error":[]
+    },
+
+    "data_quant":
+    {
+        "sea":[],
+        "mountains":[1,2],
+        "tundra":[],
+        "frozen desert":[],
+        "ocyan":[],
+        "golems land":[2,1],
+        "enchanted forest":[4,5],
+        "red desert":[2,1] ,
+        "plains":[5,2,1] ,
+        "hills":[2,2,2] ,
+        "red forest":[1,1,4] ,
+        "swamp":[5,1] ,
+        "desert":[2] ,
+        "lakes":[3,1,1] ,
+        "forest":[1,1,4] ,
+        "humid lands":[],
+        "jungle":[],
+        "savanna":[2,3] ,
+        "tropical forest":[1,1,4] ,
+        "volcanic lands":[],
+        "error":[]
+    }
 }

@@ -26,7 +26,7 @@ public class HexHeightPerlin : MonoBehaviour {
     [SerializeField] private GameObject quad;
     [SerializeField] private GameObject hexGrid;
 
-    [Header("HexGrid Modifier Parameters")]
+    [Header("HexChunk Modifier Parameters")]
     public Vector2 heightScale = new Vector2(2f, 50f);
 
     // unity functions
@@ -45,7 +45,7 @@ public class HexHeightPerlin : MonoBehaviour {
         }
         else {
             GenerateNoise();
-            hexGrid.GetComponent<HexGrid>().Refresh();
+            hexGrid.GetComponent<HexChunk>().Refresh();
         }
     }
 

@@ -75,11 +75,11 @@ public class CameraMovement : MonoBehaviour
 
     public void init(){
         // init destination
-        GameObject hexGrid = GameObject.Find("hex_grid");
-        look_at = hexGrid.GetComponent<HexGrid>().GetPositionOfCenterHex();
+        /* GameObject hexGrid = GameObject.Find("hex_chunk");
+        look_at = hexGrid.GetComponent<HexChunk>().GetPositionOfCenterHex(); */
 
         // init camera
-        LoadView(View.close);
+        LoadView(View.standard);
         RecalculateOffset();
     }
 
