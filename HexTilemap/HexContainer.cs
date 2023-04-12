@@ -5,7 +5,6 @@ using UnityEngine;
 public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
 {
     private HexRenderer renderer;
-    //private GameObject bGenerator;
     private BiomesConfiguration bConf;
 
     // unity functions
@@ -24,17 +23,13 @@ public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
 
         renderer.biome = b;
 
-        /* // get biome generator
-        if (bConf.loaded != true)
-            return; */
-
         // create children based on biome
 
         // clear children
         Clear();
 
         // create children based on biome
-        if (b == "forest"){
+        /* if (b == "forest"){
             // create trees
             int nb_trees = Random.Range(0, 4);
             for (int i = 0; i < nb_trees; i++){
@@ -42,9 +37,24 @@ public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
                 GameObject tree = Instantiate(Resources.Load("fbx/"+ tree_name)) as GameObject;
                 GetComponent<HexContainer>().Add(tree);
             }
-        }
+        } */
+        
+        // create children based on biome
 
-        // Debug.Log("biome conf data elements : " + bConf.data_elements[renderer.biome]);
+        for (int index_element = 0; index_element < bConf.data_elements[b].Count; index_element++)
+        {
+            string element = bConf.data_elements[b][index_element];
+            for (int i = 0; i < bConf.data_quants[b][index_element]; i++)
+            {
+                if (Random.Range(0f, 1f) < bConf.data_probs[b][index_element])
+                {
+                    string fbx_name = bConf.elements[element][Random.Range(0, bConf.elements[element].Count)];
+                    Debug.Log(fbx_name);
+                    GameObject obj = Instantiate(Resources.Load("fbx/" + fbx_name)) as GameObject;
+                    GetComponent<HexContainer>().Add(obj);
+                }
+            }
+        }
 
     }
 

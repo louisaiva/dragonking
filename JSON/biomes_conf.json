@@ -42,7 +42,7 @@
         "grass" : ["grass_1","grass_2"]
     },
 
-    "data_el":
+    "data_elements":
     {
         "sea":[],
         "mountains":["rock","sapin"],
@@ -67,7 +67,7 @@
         "error":[]
     },
 
-    "data_prob":
+    "data_probs":
     {
         "sea":[],
         "mountains":[0.1,0.5],
@@ -92,7 +92,7 @@
         "error":[]
     },
 
-    "data_quant":
+    "data_quants":
     {
         "sea":[],
         "mountains":[1,2],

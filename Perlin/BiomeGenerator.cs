@@ -9,8 +9,6 @@ using System.Linq;
 
 public struct BiomesConfiguration{
 
-    public bool loaded;
-
     // 1st step : height
     public Dictionary<string,float> min_height; // 0 - 10
 
@@ -306,7 +304,10 @@ public class BiomeGenerator : MonoBehaviour
         Debug.Log("Loaded biomes settings from " + p);
         BiomesConfiguration c = JsonConvert.DeserializeObject<BiomesConfiguration>(json_conf);
         c.LoadColors(main_mat);
-        c.loaded = true;
+        // c.loaded = true;
+
+        Debug.Log("data_elements : " + c.data_elements);
+
         return c;
     }
 
