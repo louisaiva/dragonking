@@ -8,4 +8,5 @@ public interface I_Clickable
     void OnClick();
     void OnDeclick();
     Vector3 GetRecenterPosition();
+    Vector2Int GetChunkPosition();
 }

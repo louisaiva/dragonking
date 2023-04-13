@@ -23,22 +23,9 @@ public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
 
         renderer.biome = b;
 
-        // create children based on biome
-
         // clear children
         Clear();
 
-        // create children based on biome
-        /* if (b == "forest"){
-            // create trees
-            int nb_trees = Random.Range(0, 4);
-            for (int i = 0; i < nb_trees; i++){
-                string tree_name = "tree_sapin" + Random.Range(1, 3);
-                GameObject tree = Instantiate(Resources.Load("fbx/"+ tree_name)) as GameObject;
-                GetComponent<HexContainer>().Add(tree);
-            }
-        } */
-        
         // create children based on biome
 
         for (int index_element = 0; index_element < bConf.data_elements[b].Count; index_element++)
@@ -49,7 +36,7 @@ public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
                 if (Random.Range(0f, 1f) < bConf.data_probs[b][index_element])
                 {
                     string fbx_name = bConf.elements[element][Random.Range(0, bConf.elements[element].Count)];
-                    Debug.Log(fbx_name);
+                    // Debug.Log(fbx_name);
                     GameObject obj = Instantiate(Resources.Load("fbx/" + fbx_name)) as GameObject;
                     GetComponent<HexContainer>().Add(obj);
                 }
@@ -160,4 +147,10 @@ public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
     {
         bConf = conf;
     }
+
+    public Vector2Int GetChunkPosition()
+    {
+        return transform.parent.GetComponent<HexChunk>().chunkPosition;
+    }
+
 }

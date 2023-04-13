@@ -4,57 +4,57 @@ using UnityEngine;
 
 
 public class HexChunk : MonoBehaviour { 
-    
-    [Header("Chunk Settings")]
-    [SerializeField] private Vector2Int chunkSize = new Vector2Int(50,50);
-    public float spacing = 0f;
 
-    [Header("Tile Settings")]
-    public float outerSize = 4f;
-    public bool isFlatTopped = false;
-    [ReadOnly, SerializeField] public float Xgrider = 0f;
-    [ReadOnly, SerializeField] public float Ygrider = 0f;
-    [ReadOnly, SerializeField] private float square3 = Mathf.Sqrt(3);
-
-
-    // recreate chunk
-    private bool regenerateChunk = true;
-    private bool refreshChunk = false;
+    // chunk settings
+    [Header("Chunk Properties")]
+    [ReadOnly] public Vector2Int chunkPosition;
+    [ReadOnly, SerializeField] private Vector2Int chunkSize;
+    [ReadOnly, SerializeField] private float spacing;
+    [ReadOnly, SerializeField] private float outerSize;
+    [ReadOnly, SerializeField] private bool isFlatTopped;
     [SerializeField] private int lod = 0;
 
+    // recreate chunk
+    [SerializeField] private bool refreshChunk = false;
+
+    // biomegenerator
+    private BiomeGenerator bGen;
 
     // unity functions
 
     private void OnValidate() {
-        if (Application.isPlaying)
-            refreshChunk = true;
-    }
 
-    private void Update() {
-
-        if (regenerateChunk && GetComponent<BiomeGenerator>().IsReady()){
-            init();
-        }
-        else if (refreshChunk){
-            
-            RefreshChunk();
-            refreshChunk = false;
-        }
-
-        // update grider
-        Xgrider = outerSize * square3;
-        Ygrider = outerSize * 3/2f;
-
+        // if chunk is initied, we refresh it
+        if (refreshChunk) RefreshChunk();
     }
 
     // init function
 
-    public void init(){
-        //Debug.Log("generating chunk");
+    public void init(Vector2Int position){
+
+        // get chunk properties
+        chunkPosition = position;
+        chunkSize = new Vector2Int(transform.parent.GetComponent<ChunkHandler>().chunkSize,transform.parent.GetComponent<ChunkHandler>().chunkSize);
+        outerSize = transform.parent.GetComponent<ChunkHandler>().outerSize;
+        isFlatTopped = transform.parent.GetComponent<ChunkHandler>().isFlatTopped;
+        spacing = transform.parent.GetComponent<ChunkHandler>().spacing;
+
+        // get biome generator
+        bGen = transform.parent.gameObject.GetComponent<BiomeGenerator>();
+    }
+
+    public void Create(int lod=0){
+        this.lod = lod;
         GenerateChunk();
-        regenerateChunk = false;
-        // castleGenerator.GetComponent<CastleGenerator>().init();
-        Camera.main.GetComponent<CameraMovement>().init();
+    }
+
+    public void Delete(){
+
+        Debug.Log("deleting chunk "+chunkPosition);
+
+        for (int i=0; i<transform.childCount; i++) {
+            Destroy(transform.GetChild(i).gameObject);
+        }
     }
 
     // important fonctions
@@ -67,20 +67,22 @@ public class HexChunk : MonoBehaviour {
             for (int x = 0; x < chunkSize.x; x++)
             {
                 GameObject tile = new GameObject($"{x}:{y}",typeof(HexRenderer),typeof(HexContainer));
-                tile.transform.position = GetPositionForHexFromCoord(new Vector2Int(x,y));
+                tile.transform.localPosition = GetPositionForHexFromCoord(new Vector2Int(x,y));
                 tile.layer = LayerMask.NameToLayer("selectable");
                 tile.transform.SetParent(transform,true);
-                tile.GetComponent<HexContainer>().SetConf(GetComponent<BiomeGenerator>().GetConf());
+                tile.GetComponent<HexContainer>().SetConf(bGen.GetConf());
             }
         }
         // and refresh it (means actually draw the hexs)
         RefreshChunk();
     }
 
-    private void RefreshChunk(){
+    public void RefreshChunk(){
 
         // get parameters map
-        Vector3[,] pmap = GetComponent<BiomeGenerator>().GenerateParamHexMap(chunkSize.x,chunkSize.y);
+        int xo = chunkPosition.x * chunkSize.x;
+        int yo = chunkPosition.y * chunkSize.y;
+        Vector3[,] pmap = bGen.GenerateParamHexMap(xo,yo,chunkSize.x,chunkSize.y);
 
         // refresh grid
         for (int i=0; i<pmap.Length; i++) {
@@ -93,18 +95,17 @@ public class HexChunk : MonoBehaviour {
                 int x = i % chunkSize.x;
                 int y = i / chunkSize.x;
 
-                string biome = GetComponent<BiomeGenerator>().GetBiome(pmap[x,y]);
+                string biome = bGen.GetBiome(pmap[x,y]);
 
                 HexRenderer hexRenderer = child.GetComponent<HexRenderer>();
                 hexRenderer.outerSize = outerSize;
                 hexRenderer.isFlatTopped = isFlatTopped;
 
                 // set height
-                hexRenderer.height = GetComponent<BiomeGenerator>().GetFinalHeight(pmap[x,y]);
-
+                hexRenderer.height = bGen.GetFinalHeight(pmap[x,y]);
 
                 // set material
-                Material mat = GetComponent<BiomeGenerator>().GetMaterial(biome);
+                Material mat = bGen.GetMaterial(biome);
                 hexRenderer.SetMaterial(mat);
 
                 // draw mesh
@@ -117,6 +118,8 @@ public class HexChunk : MonoBehaviour {
 
         PlaceHexs();
 
+        refreshChunk = false;
+
     }
 
     private void PlaceHexs(){
@@ -126,7 +129,7 @@ public class HexChunk : MonoBehaviour {
             for (int x = 0; x < chunkSize.x; x++)
             {
                 GameObject tile = GetHexAtCoord(new Vector2Int(x,y)).gameObject;
-                tile.transform.position = GetPositionForHexFromCoord(new Vector2Int(x,y));
+                tile.transform.localPosition = GetPositionForHexFromCoord(new Vector2Int(x,y));
             }
         }
     }
@@ -174,7 +177,7 @@ public class HexChunk : MonoBehaviour {
             yPosition = (row * verticalDistance) - offset;
         }
 
-        return new Vector3(xPosition,0,-yPosition);
+        return new Vector3(xPosition,0,yPosition);
     }
 
     public HexContainer GetHexAtCoord(Vector2Int coordinates){
@@ -185,25 +188,4 @@ public class HexChunk : MonoBehaviour {
         return GetHexAtCoord(new Vector2Int(chunkSize.x/2,chunkSize.y/2)).GetRecenterPosition();
     }
 
-    /* public Vector2Int[] GetRandomDifferentsPositions(int count){
-        Vector2Int[] positions = new Vector2Int[count];
-        for (int i = 0; i < count; i++)
-        {
-            Vector2Int newPos = GetRandomPosition();
-            while (System.Array.Exists(positions, element => element == newPos))
-            {
-                newPos = GetRandomPosition();
-            }
-            positions[i] = newPos;
-        }
-        return positions;
-    }
-
-    public Vector2Int GetRandomPosition(){ 
-        return new Vector2Int(Random.Range(0,chunkSize.x),Random.Range(0,chunkSize.y));
-    } */
-
-    public void Refresh(){
-        refreshChunk = true;
-    }
 }

@@ -92,9 +92,9 @@ public class HexRenderer : MonoBehaviour {
 
     // important fonctions
 
-    public void DrawMesh(int lod=0){
-
-
+    public void DrawMesh(int lod=0)
+    {
+        
         // clear mesh
         m_mesh.Clear();
 
@@ -149,7 +149,7 @@ public class HexRenderer : MonoBehaviour {
 
         // top face
         List<int> triangles = new List<int>() { 0, 2, 1, 0, 1, 6, 0, 6, 5, 0, 5, 4, 0, 4, 3, 0, 3, 2 };
-        int k = 7;
+        // int k = 7;
         // bottom face
         //triangles.AddRange(new List<int>() { 0+k, 1+k, 2+k, 0+k, 2+k, 3+k, 0+k, 3+k, 4+k, 0+k, 4+k, 5+k, 0+k, 5+k, 6+k, 0+k, 6+k, 1+k });
         Face face = new Face(vertices, triangles, uvs);

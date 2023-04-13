@@ -153,4 +153,28 @@ public class CameraAsPlayer : MonoBehaviour
         } */
     }
 
+    // getters
+
+    public I_Hooverable GetHooveredObject()
+    {
+        return hooveredObject;
+    }
+
+    public I_Clickable GetSelectedObject()
+    {
+        return selectedObject;
+    }
+
+    public Vector2Int GetSelectedObjectChunk()
+    {
+        if (selectedObject != null)
+        {
+            return selectedObject.GetChunkPosition();
+        }
+        else
+        {
+            return new Vector2Int(0, 0);
+        }
+    }
+
 }
