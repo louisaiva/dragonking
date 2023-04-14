@@ -124,7 +124,7 @@ public class BiomeGenerator : MonoBehaviour
     [ReadOnly, SerializeField] private float earth_seed = 0f;
     public float earth_size = 5;
     public float earth_scale = 0.1f;
-    public float max_height = 200;
+    public float max_height = 50;
 
     // conf
     private string json_conf;
@@ -190,6 +190,8 @@ public class BiomeGenerator : MonoBehaviour
         if (regenerate){
             regenerate = false;
             GenerateBiomes();
+            GetComponent<ChunkHandler>().SaveChunkData();
+            GetComponent<ChunkHandler>().RecreateChunks();
             GetComponent<ChunkHandler>().RefreshChunks();
         }
     }
@@ -205,7 +207,22 @@ public class BiomeGenerator : MonoBehaviour
         // PERLIN NOISE
 
         ReSeed();
-        GenerateEarth(EarthModel.normal);
+        GenerateEarth(EarthModel.full);
+    }
+
+    public void ReSeed(){
+        seed = new Vector3(UnityEngine.Random.Range(-500000,500000),UnityEngine.Random.Range(-500000,500000),UnityEngine.Random.Range(-500000,500000));
+        earth_seed = UnityEngine.Random.Range(-500000,500000);
+    }
+
+    public void GenerateEarth(float[] model){
+
+        if (model.Length != 5) return;
+
+        scales = new Vector3(model[0],model[1],model[2]);
+        earth_scale = model[3];
+        earth_size = model[4];
+        GenerateBiomes();
     }
 
     private void GenerateBiomes() {
@@ -216,9 +233,9 @@ public class BiomeGenerator : MonoBehaviour
         tmap = GenerateHexMap(scales.z,seed.z);
 
         // textures 
-        GenerateTexture(hmap, quad_height, new Vector3(.5f,1,.5f));
-        GenerateTexture(rmap, quad_rain, new Vector3(0.5f,0.5f,1));
-        GenerateTexture(tmap, quad_temp, new Vector3(1,.5f,.5f));
+        // GenerateTexture(hmap, quad_height, new Vector3(.5f,1,.5f));
+        // GenerateTexture(rmap, quad_rain, new Vector3(0.5f,0.5f,1));
+        // GenerateTexture(tmap, quad_temp, new Vector3(1,.5f,.5f));
 
         // bmap
         Texture2D texture = GenerateBiomeTexture(hmap,rmap,tmap, quad);
@@ -283,31 +300,6 @@ public class BiomeGenerator : MonoBehaviour
     }
 
 
-    // HEXS
-
-    public Vector3[,] GenerateParamHexMap(int? xo=null,int? yo=null,int? w=null, int? h=null) {
-
-        // combines the 3 maps to get the parameters of each hexagon
-
-        int hexGrid_width = w??mapSize.x;
-        int hexGrid_height = h??mapSize.y;
-
-        int x_offset = xo??0;
-        int y_offset = yo??0;
-
-        bmap = new Vector3[hexGrid_width, hexGrid_height];
-
-        for (int y = 0; y < hexGrid_height; y++) {
-            for (int x = 0; x < hexGrid_width; x++) {
-
-                // we get the parameters of the hexagon
-                bmap[x, y] = new Vector3(hmap[x+x_offset, y+y_offset], rmap[x+x_offset, y+y_offset], tmap[x+x_offset, y+y_offset]);
-            }
-        }
-
-        return bmap;
-    }
-
     // helper functions
 
     private BiomesConfiguration LoadBiomesConf(string p) {
@@ -327,21 +319,6 @@ public class BiomeGenerator : MonoBehaviour
         json_conf = JsonConvert.SerializeObject(c);
         System.IO.File.WriteAllText(p, json_conf);
         Debug.Log("Saved biomes settings to " + p);
-    }
-
-    public void ReSeed(){
-        seed = new Vector3(UnityEngine.Random.Range(-500000,500000),UnityEngine.Random.Range(-500000,500000),UnityEngine.Random.Range(-500000,500000));
-        earth_seed = UnityEngine.Random.Range(-500000,500000);
-    }
-
-    public void GenerateEarth(float[] model){
-
-        if (model.Length != 5) return;
-
-        scales = new Vector3(model[0],model[1],model[2]);
-        earth_scale = model[3];
-        earth_size = model[4];
-        GenerateBiomes();
     }
 
     // texture generation
@@ -389,6 +366,12 @@ public class BiomeGenerator : MonoBehaviour
 
         return texture;
 
+    }
+
+    private Color GetColor(string name) {
+
+        // get the biome color
+        return conf.colors[name];
     }
 
     // getters
@@ -443,12 +426,6 @@ public class BiomeGenerator : MonoBehaviour
         return "error";
     }
 
-    private Color GetColor(string name) {
-
-        // get the biome color
-        return conf.colors[name];
-    }
-
     public Material GetMaterial(string name) {
 
         // get the biome material
@@ -472,6 +449,28 @@ public class BiomeGenerator : MonoBehaviour
         return conf;
     }
 
+    // chunks
+
+    public void GetChunkData(int xo, int yo,out float[,] h_chunk_map,out string[,] b_chunk_map) {
+        
+        int size = GetComponent<ChunkHandler>().chunkSize;
+        h_chunk_map = new float[size,size];
+        b_chunk_map = new string[size,size];
+
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+
+                // get the param for this hextile
+                Vector3 param = new Vector3(hmap[i+xo, j+yo], rmap[i+xo, j+yo], tmap[i+xo, j+yo]);
+
+                // get the height and biome
+                h_chunk_map[i,j] = GetFinalHeight(param);
+                b_chunk_map[i,j] = GetBiome(param);
+            }
+        }
+        
+    }
+
 }
 
 
@@ -483,4 +482,6 @@ public static class EarthModel
     public static float[] small = new float[5] {5,0.5f,0.5f,1,2};
     public static float[] ultrasmall = new float[5] {5,0.5f,0.5f,1,1};
     public static float[] test = new float[5] {5,0.5f,0.5f,0.3f,0.5f};
+    public static float[] big = new float[5] {5,0.5f,0.5f,1,20};
+    public static float[] full = new float[5] {5,0.5f,0.5f,1,30};
 }

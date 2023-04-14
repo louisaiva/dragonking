@@ -75,8 +75,10 @@ public class CameraMovement : MonoBehaviour
 
     public void init(){
         // init destination
-        /* GameObject hexGrid = GameObject.Find("hex_chunk");
-        look_at = hexGrid.GetComponent<HexChunk>().GetPositionOfCenterHex(); */
+        /* Hex midHex = GameObject.Find("world").GetComponent<ChunkHandler>().GetWorldMidHex();
+        dest_look_at = midHex.GetTopMidPosition();
+
+        GetComponent<CameraAsPlayer>().Select(midHex); */
 
         // init camera
         LoadView(View.standard);

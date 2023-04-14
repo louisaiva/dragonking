@@ -2,68 +2,42 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
+
+[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
+public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
 {
-    private HexRenderer renderer;
-    private BiomesConfiguration bConf;
+    // parameters
+    [Header("Hex Parameters")]
+    [ReadOnly] public float outerSize = 1.5f;
+    [ReadOnly] public float height = 1f;
 
-    // unity functions
+    // biome
+    [ReadOnly] public string biome = "";
 
-    public void Awake()
-    {
-        renderer = GetComponent<HexRenderer>();
-    }
+
 
     // biome functions
 
-    public void SetBiome(string? b=null)
+    public void SetElements(HexData data)
     {
-        if (b == null)
-            return;
-
-        renderer.biome = b;
-
         // clear children
         Clear();
 
-        // create children based on biome
-
-        for (int index_element = 0; index_element < bConf.data_elements[b].Count; index_element++)
+        // add elements
+        for (int i = 0; i < data.names.Count; i++)
         {
-            string element = bConf.data_elements[b][index_element];
-            for (int i = 0; i < bConf.data_quants[b][index_element]; i++)
-            {
-                if (Random.Range(0f, 1f) < bConf.data_probs[b][index_element])
-                {
-                    string fbx_name = bConf.elements[element][Random.Range(0, bConf.elements[element].Count)];
-                    // Debug.Log(fbx_name);
-                    GameObject obj = Instantiate(Resources.Load("fbx/" + fbx_name)) as GameObject;
-                    GetComponent<HexContainer>().Add(obj);
-                }
-            }
+            GameObject obj = Instantiate(Resources.Load("fbx/" + data.names[i])) as GameObject;
+            AddAtPos(obj,data.positions[i]);
         }
 
     }
 
     // important functions
 
-    public void Add(GameObject obj)
+    public void AddAtPos(GameObject obj, Vector2 pos)
     {
         obj.transform.parent = transform;
-
-        float radius = renderer.outerSize* (3f/4f);
-        //Debug.Log(renderer.outerSize + " / " + radius);
-
-        float x = Random.Range(-radius, radius);
-        float z = Random.Range(-radius, radius);
-        obj.transform.localPosition = new Vector3(x, renderer.height, z);
-    }
-
-    public void AddCenter(GameObject obj)
-    {
-        obj.transform.parent = transform;
-        obj.transform.localPosition = new Vector3(0, renderer.height, 0);
-        
+        obj.transform.localPosition = new Vector3(pos.x,pos.y, 1);
     }
 
     public void Clear()
@@ -72,6 +46,13 @@ public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
         {
             Destroy(child.gameObject);
         }
+    }
+
+    public void Refresh(){
+        if (height < 0.001f)
+                height = 0.001f;
+
+        transform.localScale = new Vector3(outerSize, outerSize,height);
     }
 
     // hoover
@@ -138,19 +119,30 @@ public class HexContainer : MonoBehaviour, I_Hooverable, I_Clickable
 
     public Vector3 GetRecenterPosition()
     {
-        return renderer.GetTopMidPosition();
+        return GetTopMidPosition();
     }
 
     // helpers
-
-    public void SetConf(BiomesConfiguration conf)
-    {
-        bConf = conf;
-    }
 
     public Vector2Int GetChunkPosition()
     {
         return transform.parent.GetComponent<HexChunk>().chunkPosition;
     }
+
+    public void SetMaterial(Material material){
+        GetComponent<MeshRenderer>().material = material;
+    }
+
+    private void SetColor(Color color){
+        GetComponent<MeshRenderer>().material.color = color;
+    }
+
+
+    // getters
+
+    public Vector3 GetTopMidPosition(){
+        return transform.position + new Vector3(0,height,0);
+    }
+
 
 }

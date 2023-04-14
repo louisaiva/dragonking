@@ -153,6 +153,16 @@ public class CameraAsPlayer : MonoBehaviour
         } */
     }
 
+    public void Select(I_Clickable newSelectedObject)
+    {
+        if (selectedObject != null)
+        {
+            selectedObject.OnDeclick();
+        }
+        selectedObject = newSelectedObject;
+        selectedObject.OnClick();
+    }
+
     // getters
 
     public I_Hooverable GetHooveredObject()
@@ -173,7 +183,8 @@ public class CameraAsPlayer : MonoBehaviour
         }
         else
         {
-            return new Vector2Int(0, 0);
+
+            return new Vector2Int(-1, -1);
         }
     }
 

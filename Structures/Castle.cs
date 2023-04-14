@@ -169,7 +169,7 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
 
     public Vector2Int GetChunkPosition()
     {
-        return transform.parent.GetComponent<HexContainer>().GetChunkPosition();
+        return transform.parent.GetComponent<Hex>().GetChunkPosition();
     }
 
 }
