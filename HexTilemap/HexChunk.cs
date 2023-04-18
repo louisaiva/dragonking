@@ -11,7 +11,7 @@ public class HexChunk : MonoBehaviour {
     [ReadOnly, SerializeField] private Vector2Int chunkSize;
     [ReadOnly, SerializeField] private float spacing;
     [ReadOnly, SerializeField] private float outerSize;
-    [ReadOnly, SerializeField] private bool isFlatTopped;
+    // [ReadOnly, SerializeField] private bool isFlatTopped;
     [SerializeField] private int lod = 0;
 
     // biomegenerator
@@ -31,7 +31,7 @@ public class HexChunk : MonoBehaviour {
         chunkPosition = position;
         chunkSize = new Vector2Int(transform.parent.GetComponent<ChunkHandler>().chunkSize,transform.parent.GetComponent<ChunkHandler>().chunkSize);
         outerSize = transform.parent.GetComponent<ChunkHandler>().outerSize;
-        isFlatTopped = transform.parent.GetComponent<ChunkHandler>().isFlatTopped;
+        // isFlatTopped = transform.parent.GetComponent<ChunkHandler>().isFlatTopped;
         spacing = transform.parent.GetComponent<ChunkHandler>().spacing;
 
         // get biome generator
@@ -83,11 +83,14 @@ public class HexChunk : MonoBehaviour {
                 Material mat = bGen.GetMaterial(data.biomeMap[x,y]);
                 hex.SetMaterial(mat);
 
+                // set biome
+                hex.biome = data.biomeMap[x,y];
+
                 // refresh mesh
                 hex.Refresh();
 
-                // set biome elements
-                tile.GetComponent<Hex>().SetElements(data.hexDataMap[x,y]);
+                // set elements
+                hex.SetElements(data.hexDataMap[x,y]);
             }
         }
 
@@ -111,11 +114,17 @@ public class HexChunk : MonoBehaviour {
         GameObject tile = Instantiate(hexFBX,transform);
         tile.name = "hex_"+x+"_"+y;
         tile.AddComponent<Hex>();
+        tile.GetComponent<Hex>().coord = new Vector2Int(x,y);
 
         // set position
         tile.transform.localPosition = GetPositionForHexFromCoord(new Vector2Int(x,y));
         tile.layer = LayerMask.NameToLayer("selectable");
         return tile;
+    }
+
+    public void RefreshTile(Vector2Int coord,HexData data){
+        Hex hex = GetHexAtCoord(coord);
+        hex.SetElements(data);
     }
 
     // helper functions
@@ -135,7 +144,7 @@ public class HexChunk : MonoBehaviour {
         float offset;
         float size = outerSize;
 
-        if (!isFlatTopped){
+        /* if (!isFlatTopped){
 
             shouldOffset = row % 2 == 0;
             width = Mathf.Sqrt(3) * size + spacing*2;
@@ -159,7 +168,18 @@ public class HexChunk : MonoBehaviour {
             offset = shouldOffset ? height / 2 : 0;
             xPosition = column * horizontalDistance;
             yPosition = (row * verticalDistance) - offset;
-        }
+        } */
+
+        shouldOffset = row % 2 == 0;
+        width = Mathf.Sqrt(3) * size + spacing*2;
+        height = 2 * size + spacing*2;
+
+        horizontalDistance = width;
+        verticalDistance = height * 0.75f;
+
+        offset = shouldOffset ? width / 2 : 0;
+        xPosition = (column * horizontalDistance) + offset;
+        yPosition = row * verticalDistance;
 
         return new Vector3(xPosition,0,yPosition);
     }
@@ -174,6 +194,14 @@ public class HexChunk : MonoBehaviour {
 
     public Hex GetMidHex(){
         return GetHexAtCoord(new Vector2Int(chunkSize.x/2,chunkSize.y/2));
+    }
+
+    public Vector2Int GetCoord(){
+        return chunkPosition;
+    }
+
+    public Vector2Int GetSize(){
+        return chunkSize;
     }
 
 }

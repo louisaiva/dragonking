@@ -4,18 +4,12 @@ using UnityEngine;
 
 public class CastleGenerator : MonoBehaviour
 {
-    // main
-    private bool initied = false;
 
     // castles
     [SerializeField] private GameObject castleFBX;
-    [SerializeField] private int nombreCastles = 10;
+    [SerializeField] private int nombreCastles = 1000;
 
     private List<Castle> castles = new List<Castle>();
-
-    // hex grid
-    [SerializeField] private GameObject hexGrid;
-    //private HexChunk grid;
 
     // material
     [ReadOnly,SerializeField] private Material matWall;
@@ -27,18 +21,6 @@ public class CastleGenerator : MonoBehaviour
         // materials
         matWall = Resources.Load("Materials/castles/walls_1", typeof(Material)) as Material;
 
-        // hex grid
-        //grid = hexGrid.GetComponent<HexChunk>();
-    }
-
-    public void Update()
-    {
-        if (!initied) return;
-
-        if (castles.Count < nombreCastles)
-        {
-            //GenerateCastleAtCoord(grid.GetRandomPosition());
-        }
     }
 
     // init function
@@ -48,33 +30,36 @@ public class CastleGenerator : MonoBehaviour
         // castle test
         GenerateCastleAtCoord(Vector2Int.zero,"KING CASTLE");
 
-        // generate random positions on the grid
-        // Vector2Int[] positions = grid.GetRandomDifferentsPositions(nombreCastles);
-        /* Vector2Int[] positions = new Vector2Int[nombreCastles] {
-        };
-
-        // generate castles
-        for (int i = 0; i < nombreCastles; i++)
+        // generate castles at random coords
+        /* for (int i = 0; i < nombreCastles; i++)
         {
-            GenerateCastleAtCoord(positions[i]);
-        }
-
-        initied = true; */
+            GenerateCastleAtRandomCoord();
+        } */
     }
 
     // main functions
 
-    public void GenerateCastleAtPos(float x, float z,string? n = null,Color? c = null)
+    public void GenerateCastleAtRandomCoord(string? n = null,Color? c = null)
     {
         GameObject castle = CreateCastle(n,c);
-        castle.transform.position = new Vector3(x, 0, z);
-        castle.transform.parent = gameObject.transform;
+        
+        // random coord
+        Vector2Int pos = GetComponent<ChunkHandler>().GetRandomEarthCoord();
+
+        // apply to hex data
+        GetComponent<ChunkHandler>().SetElementToTile(pos,castle);
+
+        Debug.Log("castle generated at "+pos);
+
     }
 
     public void GenerateCastleAtCoord(Vector2Int pos,string? n = null,Color? c = null)
     {
         GameObject castle = CreateCastle(n,c);
-        // grid.GetHexAtCoord(pos).Add(castle);
+
+        // apply to hex data
+        GetComponent<ChunkHandler>().SetElementToTile(pos,castle);
+
     }
 
     // helper functions

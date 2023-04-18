@@ -141,22 +141,17 @@ public class BiomeGenerator : MonoBehaviour
     public GameObject quad_rain;
     public GameObject quad_temp;
     public GameObject quad;
-    public GameObject minimap;
+    public GameObject minimap; 
 
     // utils
     private bool regenerate = false;
     BiomesStats stats;
     public Material main_mat;
 
-    // we use the "17 points technique" to get the height of a hexagon from the height map
-    private readonly int[] hex_x_points = new int[17] {0,-2,-1,0,1,2,-2,-1,0,1,2,-2,-1,0,1,2,0};
-    private readonly int[] hex_y_points = new int[17] {0,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4};
-
     // pmaps
     private float[,] hmap;
     private float[,] rmap;
     private float[,] tmap;
-    Vector3[,] bmap;
 
 
     // unity functions
@@ -198,11 +193,11 @@ public class BiomeGenerator : MonoBehaviour
 
     // main functions
 
-    public void init() {
+    public void init() { 
 
         // init world size
-        int wsize = GetComponent<ChunkHandler>().chunkSize*GetComponent<ChunkHandler>().worldSizeInChunks;
-        mapSize = new Vector2Int(wsize,wsize);
+        // int wsize = GetComponent<ChunkHandler>().chunkSize*GetComponent<ChunkHandler>().worldSizeInChunks;
+        mapSize = new Vector2Int(320,320);
 
         // PERLIN NOISE
 
@@ -248,9 +243,8 @@ public class BiomeGenerator : MonoBehaviour
 
     private float[,] GenerateHexMap(float sc,float seed,bool use_earth=false){
 
-        //float scale = sc * global_scale;
-        int width = mapSize.x;
-        int height = mapSize.y;
+        int width = GetComponent<ChunkHandler>().wsize();
+        int height = GetComponent<ChunkHandler>().wsize();
 
         float[,] map = new float[width, height];
 
@@ -328,10 +322,11 @@ public class BiomeGenerator : MonoBehaviour
         Vector3 cmod = c?? new Vector3(1,1,1); // default color modifier
 
         // create texture
-        Texture2D texture = new Texture2D(mapSize.x, mapSize.y);
+        int wsize = GetComponent<ChunkHandler>().wsize();
+        Texture2D texture = new Texture2D(wsize, wsize);
 
-        for (int x = 0; x < mapSize.x; x++) {
-            for (int y = 0; y < mapSize.y; y++) {
+        for (int x = 0; x < wsize; x++) {
+            for (int y = 0; y < wsize; y++) {
                 texture.SetPixel(x, y, new Color(pmap[x, y]*cmod.x, pmap[x, y]*cmod.y, pmap[x, y]*cmod.z));
             }
         }
@@ -345,10 +340,11 @@ public class BiomeGenerator : MonoBehaviour
     private Texture2D GenerateBiomeTexture(float[,] hmap,float[,] rmap,float[,] tmap, GameObject visu) {
 
         // create texture
-        Texture2D texture = new Texture2D(mapSize.x, mapSize.y);
+        int wsize = GetComponent<ChunkHandler>().wsize();
+        Texture2D texture = new Texture2D(wsize, wsize);
 
-        for (int x = 0; x < mapSize.x; x++) {
-            for (int y = 0; y < mapSize.y; y++) {
+        for (int x = 0; x < wsize; x++) {
+            for (int y = 0; y < wsize; y++) {
 
                 Vector3 param = new Vector3(hmap[x,y],rmap[x,y],tmap[x,y]);
                 

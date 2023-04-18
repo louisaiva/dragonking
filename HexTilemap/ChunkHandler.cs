@@ -11,8 +11,7 @@ public struct ChunkData
 
 public struct HexData
 {
-    public List<string> names;
-    public List<Vector2> positions;
+    public List<GameObject> elements;
 }
 
 public class ChunkHandler : MonoBehaviour
@@ -20,6 +19,7 @@ public class ChunkHandler : MonoBehaviour
 
     [Header("World Settings")]
     public int worldSizeInChunks = 16; // 16x16 chunks
+    //       -> 40 c'est un bon nombre en plus les proportions sont pas mal avec le bug de perlin noise
     [SerializeField] private Vector2Int currentChunk = new Vector2Int(0,0);
     private Vector2Int lastChunk = new Vector2Int(-1,-1);
     [SerializeField] private int chunkFOV = 2;
@@ -30,7 +30,6 @@ public class ChunkHandler : MonoBehaviour
 
     [Header("Tile Settings")]
     public float outerSize = 4f;
-    public bool isFlatTopped = false;
     [ReadOnly, SerializeField] public float Xgrider = 0f;
     [ReadOnly, SerializeField] public float Ygrider = 0f;
     [ReadOnly, SerializeField] private float square3 = Mathf.Sqrt(3);
@@ -55,6 +54,15 @@ public class ChunkHandler : MonoBehaviour
         Xgrider = outerSize * square3;
         Ygrider = outerSize * 3/2f;
 
+        // Debug.Log("chunFOV before : "+chunkFOV);
+
+        // init chunk fov
+        if (this.chunkFOV > (this.worldSizeInChunks-1)/2){
+            this.chunkFOV = (int) (this.worldSizeInChunks-1)/2;
+        }
+
+        // Debug.Log("chunFOV after : "+chunkFOV);
+
         // first we generate the world map -> BiomeGenerator
         GetComponent<BiomeGenerator>().init();
 
@@ -64,8 +72,15 @@ public class ChunkHandler : MonoBehaviour
         // then we generate the chunks -> HexChunk
         GenerateChunks();
 
+        // then we create the castle -> CastleGenerator
+        GetComponent<CastleGenerator>().init();
+
+        // then we move the whole map to the center
+        transform.position = new Vector3(-worldSizeInChunks*chunkSize*Xgrider/2f,0,-worldSizeInChunks*chunkSize*Ygrider/2f);
+
         // then we start the camera -> CameraMovement
         Camera.main.GetComponent<CameraMovement>().init();
+
     }
 
     public void Update()
@@ -89,6 +104,12 @@ public class ChunkHandler : MonoBehaviour
             // update grider
             Xgrider = outerSize * square3;
             Ygrider = outerSize * 3/2f;
+
+            // init chunk fov
+            if (this.chunkFOV > (this.worldSizeInChunks-1)/2){
+                this.chunkFOV = (int) (this.worldSizeInChunks-1)/2;
+            }
+
 
             // update chunk fov
             RefreshChunks();
@@ -225,8 +246,7 @@ public class ChunkHandler : MonoBehaviour
     public HexData CreateElements(string b)
     {
         HexData data = new HexData();
-        data.names = new List<string>();
-        data.positions = new List<Vector2>();
+        data.elements = new List<GameObject>();
 
         // get biome config
         BiomesConfiguration bConf = GetComponent<BiomeGenerator>().GetConf();
@@ -241,17 +261,18 @@ public class ChunkHandler : MonoBehaviour
                 {
                     // get name
                     string fbx_name = bConf.elements[element][Random.Range(0, bConf.elements[element].Count)];
-                    data.names.Add(fbx_name);
 
                     // get position
                     float radius = (3f/4f); // *outerSize 
-
                     float x = Random.Range(-radius, radius);
                     float z = Random.Range(-radius, radius);
 
-                    // the position is normalized in order to be sure that the element is inside the hex
+                    // create element
+                    GameObject obj = Instantiate(Resources.Load("fbx/" + fbx_name)) as GameObject;
+                    obj.transform.localPosition = new Vector3(x, z, 1);
 
-                    data.positions.Add(new Vector2(x,z));
+                    // add to list
+                    data.elements.Add(obj);
                 }
             }
         }
@@ -259,7 +280,65 @@ public class ChunkHandler : MonoBehaviour
         return data;
     }
 
-    // helpers fonctions
+    // add delete elements to tile
+
+    public void AddToTileData(Vector2Int global_coord,GameObject element){
+
+        // global coord to local coord
+        int chunk_x = global_coord.x/chunkSize;
+        int chunk_y = global_coord.y/chunkSize;
+
+        int hex_x = global_coord.x%chunkSize;
+        int hex_y = global_coord.y%chunkSize;
+
+        // get hex data
+        List<GameObject> elements = chunkData[chunk_x,chunk_y].hexDataMap[hex_x,hex_y].elements;
+        elements.Add(element);
+    }
+
+    public void RefreshTile(Vector2Int global_coord){
+
+        
+        // global coord to local coord
+        int chunk_x = global_coord.x/chunkSize;
+        int chunk_y = global_coord.y/chunkSize;
+
+        int hex_x = global_coord.x%chunkSize;
+        int hex_y = global_coord.y%chunkSize;
+
+        // get hex data
+        HexData data = chunkData[chunk_x,chunk_y].hexDataMap[hex_x,hex_y];
+        chunks[chunk_x + chunk_y*worldSizeInChunks].GetComponent<HexChunk>().RefreshTile(new Vector2Int(hex_x,hex_y),data);
+    }
+
+    public void ClearTileData(Vector2Int global_coord){
+
+        // global coord to local coord
+        int chunk_x = global_coord.x/chunkSize;
+        int chunk_y = global_coord.y/chunkSize;
+
+        int hex_x = global_coord.x%chunkSize;
+        int hex_y = global_coord.y%chunkSize;
+
+        // get hex data
+        HexData data = new HexData();
+        data.elements = new List<GameObject>();
+        chunkData[chunk_x,chunk_y].hexDataMap[hex_x,hex_y] = data;
+    }
+
+    public void SetElementToTile(Vector2Int global_coord,GameObject element){
+
+        // clear tile data
+        ClearTileData(global_coord);
+
+        // add to tile data
+        AddToTileData(global_coord,element);
+
+        // refresh tile
+        RefreshTile(global_coord);
+    }
+
+    // getters fonctions
 
     public Vector3 GetPositionForChunkFromCoord(Vector2Int coord){
 
@@ -271,6 +350,24 @@ public class ChunkHandler : MonoBehaviour
 
     public Hex GetWorldMidHex(){
         return chunks[worldSizeInChunks/2*worldSizeInChunks+worldSizeInChunks/2].GetComponent<HexChunk>().GetMidHex();
+    }
+
+    public Vector2Int GetRandomCoord(){
+        return new Vector2Int(Random.Range(0,worldSizeInChunks*chunkSize),Random.Range(0,worldSizeInChunks*chunkSize));
+    }
+
+    public Vector2Int GetRandomEarthCoord(){
+
+        Vector2Int coord = GetRandomCoord();
+        while (chunkData[coord.x/chunkSize,coord.y/chunkSize].biomeMap[coord.x%chunkSize,coord.y%chunkSize] == "sea"){
+            coord = GetRandomCoord();
+        }
+        return coord;
+
+    }
+
+    public int wsize(){
+        return worldSizeInChunks*chunkSize;
     }
 
 }

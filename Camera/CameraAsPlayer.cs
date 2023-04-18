@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class CameraAsPlayer : MonoBehaviour
 {
@@ -14,6 +15,9 @@ public class CameraAsPlayer : MonoBehaviour
     [Header("hoovered/selected")]
     [ReadOnly, SerializeField] private string hooveredObjectName;
     [ReadOnly, SerializeField] private string selectedObjectName;
+
+    [Header("UI")]
+    [SerializeField] private GameObject selection_details;
 
     void Start()
     {
@@ -29,6 +33,20 @@ public class CameraAsPlayer : MonoBehaviour
         // maj ui
         hooveredObjectName = (hooveredObject != null) ? hooveredObject.gameObject.name : "null";
         selectedObjectName = (selectedObject != null) ? selectedObject.gameObject.name : "null";
+
+        // maj selected ui
+        if (selectedObject != null)
+        {
+            selection_details.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = selectedObject.GetHex().GetBiome();
+            selection_details.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = "x:y = " + selectedObject.GetHex().GetCoord().x + ":" + selectedObject.GetHex().GetCoord().y;
+            selection_details.transform.GetChild(2).GetComponent<TextMeshProUGUI>().text = "height = " + selectedObject.GetHex().GetHeight().ToString("n2");
+            selection_details.SetActive(true);
+        }
+        else
+        {
+            selection_details.SetActive(false);
+        }
+
     }
 
     // handlers

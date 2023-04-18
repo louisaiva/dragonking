@@ -14,7 +14,8 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
     // biome
     [ReadOnly] public string biome = "";
 
-
+    // coord
+    [ReadOnly] public Vector2Int coord = Vector2Int.zero;
 
     // biome functions
 
@@ -24,12 +25,10 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
         Clear();
 
         // add elements
-        for (int i = 0; i < data.names.Count; i++)
+        for (int i = 0; i < data.elements.Count; i++)
         {
-            GameObject obj = Instantiate(Resources.Load("fbx/" + data.names[i])) as GameObject;
-            AddAtPos(obj,data.positions[i]);
+            Add(data.elements[i]);
         }
-
     }
 
     // important functions
@@ -38,6 +37,13 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
     {
         obj.transform.parent = transform;
         obj.transform.localPosition = new Vector3(pos.x,pos.y, 1);
+    }
+
+    public void Add(GameObject obj)
+    {
+        Vector3 localPos = new Vector3(obj.transform.localPosition.x,obj.transform.localPosition.y, 1);
+        obj.transform.parent = transform;
+        obj.transform.localPosition = localPos;
     }
 
     public void Clear()
@@ -122,6 +128,11 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
         return GetTopMidPosition();
     }
 
+    public Hex GetHex()
+    {
+        return this;
+    }
+
     // helpers
 
     public Vector2Int GetChunkPosition()
@@ -144,5 +155,18 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
         return transform.position + new Vector3(0,height,0);
     }
 
+    public string GetBiome(){
+        return biome;
+    }
+
+    public Vector2Int GetCoord(){
+        Vector2Int cCoord = transform.parent.GetComponent<HexChunk>().GetCoord();
+        Vector2Int cSize = transform.parent.GetComponent<HexChunk>().GetSize();
+        return new Vector2Int(cCoord.x*cSize.x + coord.x,cCoord.y*cSize.y + coord.y);
+    }
+
+    public float GetHeight(){
+        return height;
+    }
 
 }

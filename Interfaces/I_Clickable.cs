@@ -9,4 +9,5 @@ public interface I_Clickable
     void OnDeclick();
     Vector3 GetRecenterPosition();
     Vector2Int GetChunkPosition();
+    Hex GetHex();
 }

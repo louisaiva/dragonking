@@ -61,7 +61,7 @@ public class CameraMovement : MonoBehaviour
 
         if (!autoRotating)
             RecalculateOffset();
-
+ 
     }
 
     private void OnDrawGizmos()
@@ -75,13 +75,13 @@ public class CameraMovement : MonoBehaviour
 
     public void init(){
         // init destination
-        /* Hex midHex = GameObject.Find("world").GetComponent<ChunkHandler>().GetWorldMidHex();
+        Hex midHex = GameObject.Find("world").GetComponent<ChunkHandler>().GetWorldMidHex();
         dest_look_at = midHex.GetTopMidPosition();
 
-        GetComponent<CameraAsPlayer>().Select(midHex); */
+        GetComponent<CameraAsPlayer>().Select(midHex);
 
         // init camera
-        LoadView(View.standard);
+        LoadView(View.civ6);
         RecalculateOffset();
     }
 
@@ -168,4 +168,5 @@ static class View
     public static Vector3 standard = new Vector3(45f, 0f, 70f);
     public static Vector3 top = new Vector3(90f, 0f, 70f);
     public static Vector3 close = new Vector3(20f, 0f, 70f);
+    public static Vector3 civ6 = new Vector3(60f, 0f, 70f);
 }
