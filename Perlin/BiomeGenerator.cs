@@ -177,17 +177,13 @@ public class BiomeGenerator : MonoBehaviour
             reSeed = false;
             ReSeed();
         }
-
-        regenerate = true;
+        // regenerate = true;
     }
 
     private void Update(){
         if (regenerate){
             regenerate = false;
-            GenerateBiomes();
-            GetComponent<ChunkHandler>().SaveChunkData();
-            GetComponent<ChunkHandler>().RecreateChunks();
-            GetComponent<ChunkHandler>().RefreshChunks();
+            GetComponent<ChunkHandler>().Restart();
         }
     }
 
@@ -203,6 +199,7 @@ public class BiomeGenerator : MonoBehaviour
 
         ReSeed();
         GenerateEarth(EarthModel.full);
+        regenerate = false;
     }
 
     public void ReSeed(){
@@ -220,7 +217,7 @@ public class BiomeGenerator : MonoBehaviour
         GenerateBiomes();
     }
 
-    private void GenerateBiomes() {
+    public void GenerateBiomes() {
         
         // pmaps
         hmap = GenerateHexMap(scales.x,seed.x,true);
@@ -447,24 +444,73 @@ public class BiomeGenerator : MonoBehaviour
 
     // chunks
 
-    public void GetChunkData(int xo, int yo,out float[,] h_chunk_map,out string[,] b_chunk_map) {
+    public void GenerateChunkData(int xo, int yo,out ChunkData data) {
         
         int size = GetComponent<ChunkHandler>().chunkSize;
-        h_chunk_map = new float[size,size];
-        b_chunk_map = new string[size,size];
+        data.hexDataMap = new HexData[size,size];
 
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
 
-                // get the param for this hextile
-                Vector3 param = new Vector3(hmap[i+xo, j+yo], rmap[i+xo, j+yo], tmap[i+xo, j+yo]);
-
-                // get the height and biome
-                h_chunk_map[i,j] = GetFinalHeight(param);
-                b_chunk_map[i,j] = GetBiome(param);
+                data.hexDataMap[i,j] = GenerateHexData(new Vector2Int(i+xo,j+yo));
             }
         }
         
+    }
+    
+
+    public HexData GenerateHexData(Vector2Int coo){
+
+        // generate trees,rocks,etc... based on biome
+        HexData data = new HexData();
+
+        // get the param for this hextile
+        Vector3 param = new Vector3(hmap[coo.x, coo.y], rmap[coo.x, coo.y], tmap[coo.x, coo.y]);
+
+        // get the height and biome
+        data.height = GetFinalHeight(param);
+        data.biome = GetBiome(param);
+
+        // generate trees,rocks,etc... based on biome
+        data.elements = GenerateHexElements(data.biome);
+
+        return data;
+    }
+
+    public List<GameObject> GenerateHexElements(string b)
+    {
+        List<GameObject> data = new List<GameObject>();
+
+        // get biome config
+        // BiomesConfiguration bConf = GetComponent<BiomeGenerator>().GetConf();
+
+        // create data based on biome
+        for (int index_element = 0; index_element < conf.data_elements[b].Count; index_element++)
+        {
+            string element = conf.data_elements[b][index_element];
+            for (int i = 0; i < conf.data_quants[b][index_element]; i++)
+            {
+                if (UnityEngine.Random.Range(0f, 1f) < conf.data_probs[b][index_element])
+                {
+                    // get name
+                    string fbx_name = conf.elements[element][UnityEngine.Random.Range(0, conf.elements[element].Count)];
+
+                    // get position
+                    float radius = (3f/4f); // *outerSize 
+                    float x = UnityEngine.Random.Range(-radius, radius);
+                    float z = UnityEngine.Random.Range(-radius, radius);
+
+                    // create element
+                    GameObject obj = Instantiate(Resources.Load("fbx/" + fbx_name)) as GameObject;
+                    obj.transform.localPosition = new Vector3(x, z, 1);
+
+                    // add to list
+                    data.Add(obj);
+                }
+            }
+        }
+
+        return data;
     }
 
 }

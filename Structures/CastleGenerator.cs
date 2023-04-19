@@ -25,16 +25,30 @@ public class CastleGenerator : MonoBehaviour
 
     // init function
 
-    public void init(){
+    public void GenerateCastles(){
 
         // castle test
         GenerateCastleAtCoord(Vector2Int.zero,"KING CASTLE");
 
         // generate castles at random coords
-        /* for (int i = 0; i < nombreCastles; i++)
+        for (int i = 0; i < nombreCastles; i++)
         {
             GenerateCastleAtRandomCoord();
-        } */
+        }
+    }
+
+    public void RegenerateCastles(){
+        
+        // clear
+        for (int i = 0; i < castles.Count; i++)
+        {
+            Destroy(castles[i].gameObject);
+        }
+        castles = new List<Castle>();
+
+        // regenerate
+        GenerateCastles();
+
     }
 
     // main functions
@@ -59,6 +73,12 @@ public class CastleGenerator : MonoBehaviour
 
         // apply to hex data
         GetComponent<ChunkHandler>().SetElementToTile(pos,castle);
+        HexData data = GetComponent<ChunkHandler>().GetTileData(pos);
+        Debug.Log("castle generated at "+pos + " on biome " + data.biome + " with height " + data.height + " and elements " + data.elements.Count);
+        for (int i = 0; i < data.elements.Count; i++)
+        {
+            Debug.Log("element " + i + " : " + data.elements[i].name);
+        }
 
     }
 
@@ -90,5 +110,4 @@ public class CastleGenerator : MonoBehaviour
 
         return castle;
     }
-
 }

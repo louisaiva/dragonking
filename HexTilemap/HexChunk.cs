@@ -11,11 +11,10 @@ public class HexChunk : MonoBehaviour {
     [ReadOnly, SerializeField] private Vector2Int chunkSize;
     [ReadOnly, SerializeField] private float spacing;
     [ReadOnly, SerializeField] private float outerSize;
-    // [ReadOnly, SerializeField] private bool isFlatTopped;
     [SerializeField] private int lod = 0;
 
     // biomegenerator
-    private BiomeGenerator bGen;
+    public BiomeGenerator bGen;
 
     // hex fbx
     private GameObject hexFBX;
@@ -31,16 +30,15 @@ public class HexChunk : MonoBehaviour {
         chunkPosition = position;
         chunkSize = new Vector2Int(transform.parent.GetComponent<ChunkHandler>().chunkSize,transform.parent.GetComponent<ChunkHandler>().chunkSize);
         outerSize = transform.parent.GetComponent<ChunkHandler>().outerSize;
-        // isFlatTopped = transform.parent.GetComponent<ChunkHandler>().isFlatTopped;
         spacing = transform.parent.GetComponent<ChunkHandler>().spacing;
 
         // get biome generator
         bGen = transform.parent.gameObject.GetComponent<BiomeGenerator>();
     }
 
-    public void Create(ChunkData data,int lod=0){
+    public void CreateChunk(ChunkData data,int lod=0){
         this.lod = lod;
-        Refresh(data);
+        RefreshChunk(data);
     }
 
     public void Delete(){
@@ -48,21 +46,23 @@ public class HexChunk : MonoBehaviour {
         // Debug.Log("deleting chunk "+chunkPosition);
 
         for (int i=0; i<transform.childCount; i++) {
-            transform.GetChild(i).GetComponent<Hex>().Clear();
+            transform.GetChild(i).GetComponent<Hex>().ClearElements();
             Destroy(transform.GetChild(i).gameObject);
         }
     }
 
     // important fonctions
 
-    public void Refresh(ChunkData data){
+    public void RefreshChunk(ChunkData data){
+
+        // Debug.Log("refreshing chunk "+chunkPosition);
 
         // create grid
-        for (int y=0; y<data.heightMap.GetLength(1); y++) {
-            for (int x=0; x<data.heightMap.GetLength(0); x++) {
+        for (int y=0; y<data.hexDataMap.GetLength(1); y++) {
+            for (int x=0; x<data.hexDataMap.GetLength(0); x++) {
 
-                // get child
-                int child_index = y * data.heightMap.GetLength(0) + x;
+                // get or create child
+                int child_index = y * data.hexDataMap.GetLength(0) + x;
                 GameObject tile;
                 if (child_index >= transform.childCount){
                     tile = CreateTile(x,y);
@@ -74,23 +74,8 @@ public class HexChunk : MonoBehaviour {
                 // refresh hex
                 Hex hex = tile.GetComponent<Hex>();
                 hex.outerSize = outerSize;
-                // hex.isFlatTopped = isFlatTopped;
-
-                // set height
-                hex.height = data.heightMap[x,y];
-
-                // set material
-                Material mat = bGen.GetMaterial(data.biomeMap[x,y]);
-                hex.SetMaterial(mat);
-
-                // set biome
-                hex.biome = data.biomeMap[x,y];
-
-                // refresh mesh
-                hex.Refresh();
-
-                // set elements
-                hex.SetElements(data.hexDataMap[x,y]);
+                // Debug.Log("refreshing "+hex.name);
+                hex.Refresh(data.hexDataMap[x,y]);
             }
         }
 
@@ -124,7 +109,7 @@ public class HexChunk : MonoBehaviour {
 
     public void RefreshTile(Vector2Int coord,HexData data){
         Hex hex = GetHexAtCoord(coord);
-        hex.SetElements(data);
+        hex.Refresh(data);
     }
 
     // helper functions
@@ -143,32 +128,6 @@ public class HexChunk : MonoBehaviour {
         float verticalDistance;
         float offset;
         float size = outerSize;
-
-        /* if (!isFlatTopped){
-
-            shouldOffset = row % 2 == 0;
-            width = Mathf.Sqrt(3) * size + spacing*2;
-            height = 2 * size + spacing*2;
-
-            horizontalDistance = width;
-            verticalDistance = height * 0.75f;
-
-            offset = shouldOffset ? width / 2 : 0;
-            xPosition = (column * horizontalDistance) + offset;
-            yPosition = row * verticalDistance;
-        }
-        else{
-            shouldOffset = column % 2 == 0;
-            width = 2 * size + spacing*2;
-            height = Mathf.Sqrt(3) * size + spacing*2;
-
-            horizontalDistance = width * 0.75f;
-            verticalDistance = height;
-
-            offset = shouldOffset ? height / 2 : 0;
-            xPosition = column * horizontalDistance;
-            yPosition = (row * verticalDistance) - offset;
-        } */
 
         shouldOffset = row % 2 == 0;
         width = Mathf.Sqrt(3) * size + spacing*2;

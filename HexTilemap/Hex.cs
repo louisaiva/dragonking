@@ -21,14 +21,38 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
 
     public void SetElements(HexData data)
     {
-        // clear children
-        Clear();
+        // Debug.Log("setting elements to hex " + coord + " with " + data.elements.Count + " elements");
+
+        // clear_Elements children
+        List<GameObject> to_delete = new List<GameObject>();
+        foreach (Transform g in transform)
+        {
+            to_delete.Add(g.gameObject);
+        }
 
         // add elements
         for (int i = 0; i < data.elements.Count; i++)
         {
-            Add(data.elements[i]);
+            
+            GameObject obj = data.elements[i];
+
+            if (to_delete.Find(o => o == obj) != null)
+            {
+                to_delete.Remove(obj);
+                continue;
+            }
+            else
+            {
+                Add(obj);
+            }
         }
+
+        // delete elements
+        foreach (GameObject obj in to_delete)
+        {
+            Del(obj);
+        }
+
     }
 
     // important functions
@@ -46,10 +70,18 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
         obj.transform.localPosition = localPos;
     }
 
-    public void Clear()
+    public void Del(GameObject obj)
     {
-        foreach (Transform child in transform)
+        Destroy(obj);
+    }
+
+    public void ClearElements()
+    {
+        // Debug.Log("clearing elements of " + name);
+        for (int i = 0; i < transform.childCount; i++)
         {
+            Transform child = transform.GetChild(i);
+            Debug.Log("destroying " + child.name);
             Destroy(child.gameObject);
         }
     }
@@ -59,6 +91,21 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
                 height = 0.001f;
 
         transform.localScale = new Vector3(outerSize, outerSize,height);
+    }
+
+    public void Refresh(HexData data){
+
+        // set height
+        height = data.height;
+        Refresh();
+
+        // set biome
+        biome = data.biome;
+
+        // set material
+        Material mat = transform.parent.GetComponent<HexChunk>().bGen.GetMaterial(data.biome);
+        SetMaterial(mat);
+        SetElements(data);
     }
 
     // hoover

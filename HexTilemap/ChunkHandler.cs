@@ -4,14 +4,14 @@ using UnityEngine;
 
 public struct ChunkData
 {
-    public float[,] heightMap;
-    public string[,] biomeMap;
     public HexData[,] hexDataMap;
 }
 
 public struct HexData
 {
     public List<GameObject> elements;
+    public string biome;
+    public float height;
 }
 
 public class ChunkHandler : MonoBehaviour
@@ -73,7 +73,7 @@ public class ChunkHandler : MonoBehaviour
         GenerateChunks();
 
         // then we create the castle -> CastleGenerator
-        GetComponent<CastleGenerator>().init();
+        GetComponent<CastleGenerator>().GenerateCastles();
 
         // then we move the whole map to the center
         transform.position = new Vector3(-worldSizeInChunks*chunkSize*Xgrider/2f,0,-worldSizeInChunks*chunkSize*Ygrider/2f);
@@ -81,6 +81,19 @@ public class ChunkHandler : MonoBehaviour
         // then we start the camera -> CameraMovement
         Camera.main.GetComponent<CameraMovement>().init();
 
+    }
+
+    public void Restart(){
+        
+
+
+        GetComponent<BiomeGenerator>().GenerateBiomes();
+        SaveChunkData();
+        RecreateChunks();
+        GetComponent<CastleGenerator>().RegenerateCastles();
+        RefreshChunks();
+
+        Debug.Log("Restarted");
     }
 
     public void Update()
@@ -95,6 +108,13 @@ public class ChunkHandler : MonoBehaviour
             RefreshChunks();
             lastChunk = currentChunk;
         }
+
+        /* // change hex biome at random coord
+        Vector2Int coord = new Vector2Int(Random.Range(0,chunkSize),Random.Range(0,chunkSize));
+        Vector2Int chunk = new Vector2Int(Random.Range(0,worldSizeInChunks),Random.Range(0,worldSizeInChunks));
+        ClearTileElements(chunk,coord);
+        ChangeTileBiome(chunk,coord,"ocyan");
+        RefreshTile(chunk,coord); */
     }
 
     void OnValidate()
@@ -135,33 +155,15 @@ public class ChunkHandler : MonoBehaviour
                 int yo = y * chunkSize;
 
                 // get chunk heightmap and biomes
-                GetComponent<BiomeGenerator>().GetChunkData(xo,yo,out data.heightMap,out data.biomeMap);
+                GetComponent<BiomeGenerator>().GenerateChunkData(xo,yo,out data);
 
                 // generate hex data
-                data.hexDataMap = GenerateHexData(data.biomeMap);
+                // data.hexDataMap = GenerateHexData(data.biomeMap);
 
                 // save chunk data
                 chunkData[x,y] = data;
             }
         }
-    }
-
-    public HexData[,] GenerateHexData(string[,] biomeMap){
-
-        // TODO : ptet c'est plus logique de mettre cette fct dans BiomeGenerator
-        
-        // generate trees,rocks,etc... based on biome
-        HexData[,] data = new HexData[chunkSize,chunkSize];
-
-        for (int y = 0; y < chunkSize; y++)
-        {
-            for (int x = 0; x < chunkSize; x++)
-            {
-                data[x,y] = CreateElements(biomeMap[x,y]);
-            }
-        }
-
-        return data;
     }
 
     // important function
@@ -181,7 +183,7 @@ public class ChunkHandler : MonoBehaviour
                 chunks.Add(chunk);
 
                 // refresh it
-                chunk.GetComponent<HexChunk>().Create(chunkData[x,y]);
+                chunk.GetComponent<HexChunk>().CreateChunk(chunkData[x,y]);
 
                 // set inactive
                 chunk.SetActive(false);
@@ -200,7 +202,7 @@ public class ChunkHandler : MonoBehaviour
                 for (int x = 0; x < worldSizeInChunks; x++)
                 {
                     // refresh it
-                    chunks[x+y*worldSizeInChunks].GetComponent<HexChunk>().Create(chunkData[x,y]);
+                    chunks[x+y*worldSizeInChunks].GetComponent<HexChunk>().CreateChunk(chunkData[x,y]);
                 }
             }
         }
@@ -243,99 +245,55 @@ public class ChunkHandler : MonoBehaviour
         }
     }
 
-    public HexData CreateElements(string b)
-    {
-        HexData data = new HexData();
-        data.elements = new List<GameObject>();
-
-        // get biome config
-        BiomesConfiguration bConf = GetComponent<BiomeGenerator>().GetConf();
-
-        // create data based on biome
-        for (int index_element = 0; index_element < bConf.data_elements[b].Count; index_element++)
-        {
-            string element = bConf.data_elements[b][index_element];
-            for (int i = 0; i < bConf.data_quants[b][index_element]; i++)
-            {
-                if (Random.Range(0f, 1f) < bConf.data_probs[b][index_element])
-                {
-                    // get name
-                    string fbx_name = bConf.elements[element][Random.Range(0, bConf.elements[element].Count)];
-
-                    // get position
-                    float radius = (3f/4f); // *outerSize 
-                    float x = Random.Range(-radius, radius);
-                    float z = Random.Range(-radius, radius);
-
-                    // create element
-                    GameObject obj = Instantiate(Resources.Load("fbx/" + fbx_name)) as GameObject;
-                    obj.transform.localPosition = new Vector3(x, z, 1);
-
-                    // add to list
-                    data.elements.Add(obj);
-                }
-            }
-        }
-
-        return data;
-    }
-
     // add delete elements to tile
 
-    public void AddToTileData(Vector2Int global_coord,GameObject element){
-
-        // global coord to local coord
-        int chunk_x = global_coord.x/chunkSize;
-        int chunk_y = global_coord.y/chunkSize;
-
-        int hex_x = global_coord.x%chunkSize;
-        int hex_y = global_coord.y%chunkSize;
+    private void AddToTileData(Vector2Int ch_coo,Vector2Int hex_coo,GameObject element){
 
         // get hex data
-        List<GameObject> elements = chunkData[chunk_x,chunk_y].hexDataMap[hex_x,hex_y].elements;
+        List<GameObject> elements = chunkData[ch_coo.x,ch_coo.y].hexDataMap[hex_coo.x,hex_coo.y].elements;
         elements.Add(element);
     }
 
-    public void RefreshTile(Vector2Int global_coord){
-
-        
-        // global coord to local coord
-        int chunk_x = global_coord.x/chunkSize;
-        int chunk_y = global_coord.y/chunkSize;
-
-        int hex_x = global_coord.x%chunkSize;
-        int hex_y = global_coord.y%chunkSize;
+    private void RefreshTile(Vector2Int ch_coo,Vector2Int hex_coo){
 
         // get hex data
-        HexData data = chunkData[chunk_x,chunk_y].hexDataMap[hex_x,hex_y];
-        chunks[chunk_x + chunk_y*worldSizeInChunks].GetComponent<HexChunk>().RefreshTile(new Vector2Int(hex_x,hex_y),data);
+        HexData data = chunkData[ch_coo.x,ch_coo.y].hexDataMap[hex_coo.x,hex_coo.y];
+        chunks[ch_coo.x + ch_coo.y*worldSizeInChunks].GetComponent<HexChunk>().RefreshTile(hex_coo,data);
     }
 
-    public void ClearTileData(Vector2Int global_coord){
-
-        // global coord to local coord
-        int chunk_x = global_coord.x/chunkSize;
-        int chunk_y = global_coord.y/chunkSize;
-
-        int hex_x = global_coord.x%chunkSize;
-        int hex_y = global_coord.y%chunkSize;
+    private void ClearTileElements(Vector2Int ch_coo,Vector2Int hex_coo){
 
         // get hex data
-        HexData data = new HexData();
-        data.elements = new List<GameObject>();
-        chunkData[chunk_x,chunk_y].hexDataMap[hex_x,hex_y] = data;
+        chunkData[ch_coo.x,ch_coo.y].hexDataMap[hex_coo.x,hex_coo.y].elements = new List<GameObject>();
+    }
+
+    private void ChangeTileBiome(Vector2Int ch_coo,Vector2Int hex_coo,string biome){
+
+        // set hex data
+        chunkData[ch_coo.x,ch_coo.y].hexDataMap[hex_coo.x,hex_coo.y].biome = biome;
     }
 
     public void SetElementToTile(Vector2Int global_coord,GameObject element){
 
+        Vector2Int ch_coo = GetChunkCoordFromGlobalHexCoord(global_coord);
+        Vector2Int hex_coo = GetHexCoordFromGlobalHexCoord(global_coord);
+
         // clear tile data
-        ClearTileData(global_coord);
+        ClearTileElements(ch_coo,hex_coo);
 
         // add to tile data
-        AddToTileData(global_coord,element);
+        AddToTileData(ch_coo,hex_coo,element);
 
         // refresh tile
-        RefreshTile(global_coord);
+        RefreshTile(ch_coo,hex_coo);
+    }
+
+    public HexData GetTileData(Vector2Int global_coord){
+
+        Vector2Int ch_coo = GetChunkCoordFromGlobalHexCoord(global_coord);
+        Vector2Int hex_coo = GetHexCoordFromGlobalHexCoord(global_coord);
+
+        return chunkData[ch_coo.x,ch_coo.y].hexDataMap[hex_coo.x,hex_coo.y];
     }
 
     // getters fonctions
@@ -359,7 +317,7 @@ public class ChunkHandler : MonoBehaviour
     public Vector2Int GetRandomEarthCoord(){
 
         Vector2Int coord = GetRandomCoord();
-        while (chunkData[coord.x/chunkSize,coord.y/chunkSize].biomeMap[coord.x%chunkSize,coord.y%chunkSize] == "sea"){
+        while (chunkData[coord.x/chunkSize,coord.y/chunkSize].hexDataMap[coord.x%chunkSize,coord.y%chunkSize].biome == "sea"){
             coord = GetRandomCoord();
         }
         return coord;
@@ -368,6 +326,13 @@ public class ChunkHandler : MonoBehaviour
 
     public int wsize(){
         return worldSizeInChunks*chunkSize;
+    }
+
+    public Vector2Int GetChunkCoordFromGlobalHexCoord(Vector2Int coord){
+        return new Vector2Int(coord.x/chunkSize,coord.y/chunkSize);
+    }
+    public Vector2Int GetHexCoordFromGlobalHexCoord(Vector2Int coord){
+        return new Vector2Int(coord.x%chunkSize,coord.y%chunkSize);
     }
 
 }
