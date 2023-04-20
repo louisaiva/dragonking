@@ -5,6 +5,9 @@ using UnityEngine;
 public class CastleGenerator : MonoBehaviour
 {
 
+    // player
+    [SerializeField] private GameObject player;
+
     // castles
     [SerializeField] private GameObject castleFBX;
     [SerializeField] private int nombreCastles = 1000;
@@ -16,10 +19,10 @@ public class CastleGenerator : MonoBehaviour
 
     // unity functions
 
-    void Start()
+    void Awake()
     {
         // materials
-        matWall = Resources.Load("Materials/castles/walls_1", typeof(Material)) as Material;
+        matWall = Resources.Load("Materials/castles/walls_2", typeof(Material)) as Material;
 
     }
 
@@ -28,13 +31,16 @@ public class CastleGenerator : MonoBehaviour
     public void GenerateCastles(){
 
         // castle test
-        GenerateCastleAtCoord(Vector2Int.zero,"KING CASTLE");
+        // GenerateCastleAtCoord(Vector2Int.zero,"KING CASTLE");
 
         // generate castles at random coords
         for (int i = 0; i < nombreCastles; i++)
         {
             GenerateCastleAtRandomCoord();
         }
+
+        // set player castle
+        player.GetComponent<PlayerUIHandler>().SetCastle(castles[0]);
     }
 
     public void RegenerateCastles(){
@@ -93,20 +99,13 @@ public class CastleGenerator : MonoBehaviour
         GameObject castle = Instantiate(castleFBX);
         castle.name = name;
 
-        // create mesh collider & apply material
-        foreach (Transform child in castle.transform)
-        {
-            child.gameObject.GetComponent<Renderer>().material = matWall;
-            child.gameObject.AddComponent<MeshCollider>();
-        }
-
         // color
         Color color = c ?? new Color(Random.value, Random.value, Random.value);
 
         // give script to castle and give random color
         castle.AddComponent<Castle>();
         castles.Add(castle.GetComponent<Castle>());
-        castle.GetComponent<Castle>().init(name, color);
+        castle.GetComponent<Castle>().init(name, color, matWall);
 
         return castle;
     }
