@@ -23,17 +23,17 @@ public struct CastleResources
 
     // constructor
     public void randomize(){
-        foodQty = Mathf.RoundToInt(Random.Range(0,3000));
-        woodQty = Mathf.RoundToInt(Random.Range(0,3000));
-        stoneQty = Mathf.RoundToInt(Random.Range(0,3000));
-        ironQty = Mathf.RoundToInt(Random.Range(0,3000));
-        goldQty = Mathf.RoundToInt(Random.Range(0,3000));
+        foodQty = 0;
+        woodQty = 0;
+        stoneQty = 0;
+        ironQty = 0;
+        goldQty = 0;
 
-        foodDiff = Random.Range(-1000000, 1000000);
-        woodDiff = Random.Range(-1000000, 1000000);
-        stoneDiff = Random.Range(-1000000, 1000000);
-        ironDiff = Random.Range(-1000000, 1000000);
-        goldDiff = Random.Range(-1000000, 1000000);
+        foodDiff = 900000000; // peut pas dépasser 2 000 000 000
+        woodDiff = 10000;
+        stoneDiff = 10000;
+        ironDiff = 0;
+        goldDiff = 10000;
     }
 
     // update
@@ -48,13 +48,13 @@ public struct CastleResources
         {
             int diff = getDiff(resource);
             float qty = getRealQty(resource);
-            Debug.Log(resource + " " + qty + " " + diff * multiplier);
+            // Debug.Log(resource + " " + qty + " " + diff * multiplier);
             setQty(resource, qty + diff * multiplier);
 
             float newQty = getRealQty(resource);
 
             if (Mathf.Abs(newQty - qty) > 1){
-                Debug.Log(resource + " just changed");
+                // Debug.Log(resource + " just changed");
             }
         }
 
@@ -153,6 +153,11 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
     [ReadOnly,SerializeField] private int maxLife;
     [ReadOnly,SerializeField] private int currentLife;
 
+    // ui
+
+    public GameObject ui { get; set; }
+
+
     // resources
     private CastleResources resources;
     [ReadOnly,SerializeField] private int foodVisu;
@@ -162,9 +167,9 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
     [ReadOnly,SerializeField] private int goldVisu;
 
 
-    // ui
+    // buildings
+    private List<I_Building> buildings;
 
-    public GameObject ui { get; set; }
 
     // init
 
@@ -350,6 +355,16 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
     public CastleResources GetResources()
     {
         return resources;
+    }
+
+    // resources
+
+    public void UpdateResources()
+    {
+
+        // update the diff of each resources according to the buildings
+
+
     }
 
 }

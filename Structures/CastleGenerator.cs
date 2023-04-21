@@ -10,7 +10,7 @@ public class CastleGenerator : MonoBehaviour
 
     // castles
     [SerializeField] private GameObject castleFBX;
-    [SerializeField] private int nombreCastles = 1000;
+    // [SerializeField] private int nombreCastles = 1000;
 
     private List<Castle> castles = new List<Castle>();
 
@@ -28,7 +28,7 @@ public class CastleGenerator : MonoBehaviour
 
     // init function
 
-    public void GenerateCastles(){
+    public void GenerateCastles(int nombreCastles = 1){
 
         // castle test
         // GenerateCastleAtCoord(Vector2Int.zero,"KING CASTLE");
@@ -40,7 +40,8 @@ public class CastleGenerator : MonoBehaviour
         }
 
         // set player castle
-        player.GetComponent<PlayerUIHandler>().SetCastle(castles[0]);
+        if (castles.Count > 0)
+            player.GetComponent<PlayerUIHandler>().SetCastle(castles[0]);
     }
 
     public void RegenerateCastles(){
@@ -69,7 +70,7 @@ public class CastleGenerator : MonoBehaviour
         // apply to hex data
         GetComponent<ChunkHandler>().SetElementToTile(pos,castle);
 
-        Debug.Log("castle generated at "+pos);
+        // Debug.Log("castle generated at "+pos);
 
     }
 
@@ -80,11 +81,6 @@ public class CastleGenerator : MonoBehaviour
         // apply to hex data
         GetComponent<ChunkHandler>().SetElementToTile(pos,castle);
         HexData data = GetComponent<ChunkHandler>().GetTileData(pos);
-        Debug.Log("castle generated at "+pos + " on biome " + data.biome + " with height " + data.height + " and elements " + data.elements.Count);
-        for (int i = 0; i < data.elements.Count; i++)
-        {
-            Debug.Log("element " + i + " : " + data.elements[i].name);
-        }
 
     }
 

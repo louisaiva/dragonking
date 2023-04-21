@@ -300,7 +300,7 @@ public class BiomeGenerator : MonoBehaviour
         c.LoadColors(main_mat);
         // c.loaded = true;
 
-        Debug.Log("data_elements : " + c.data_elements);
+        // Debug.Log("data_elements : " + c.data_elements);
 
         return c;
     }

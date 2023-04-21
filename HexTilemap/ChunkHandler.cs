@@ -2,6 +2,77 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public struct WorldData
+{
+    public int castlesCount;
+    public int earthHexCount;
+    public int waterHexCount;
+    public int totalHexCount;
+
+    public void AnalyseTiles(ChunkData[,] chunkData){
+
+        // init
+        earthHexCount = 0;
+        waterHexCount = 0;
+        totalHexCount = 0;
+
+        // analyse
+        for (int i = 0; i < chunkData.GetLength(0); i++)
+        {
+            for (int j = 0; j < chunkData.GetLength(1); j++)
+            {
+                for (int k = 0; k < chunkData[i,j].hexDataMap.GetLength(0); k++)
+                {
+                    for (int l = 0; l < chunkData[i,j].hexDataMap.GetLength(1); l++)
+                    {
+                        if (chunkData[i,j].hexDataMap[k,l].biome == "sea"){
+                            waterHexCount++;
+                        } else {
+                            earthHexCount++;
+                        }
+                        totalHexCount++;
+                    }
+                }
+            }
+        }
+    }
+
+    public void AnalyseCastles(ChunkData[,] chunkData){
+
+        // init
+        castlesCount = 0;
+
+        // analyse
+        for (int i = 0; i < chunkData.GetLength(0); i++)
+        {
+            for (int j = 0; j < chunkData.GetLength(1); j++)
+            {
+                for (int k = 0; k < chunkData[i,j].hexDataMap.GetLength(0); k++)
+                {
+                    for (int l = 0; l < chunkData[i,j].hexDataMap.GetLength(1); l++)
+                    {
+                        if (chunkData[i,j].hexDataMap[k,l].elements.Count > 0){
+                            foreach (GameObject element in chunkData[i,j].hexDataMap[k,l].elements){
+                                if (element.GetComponent<Castle>()){
+                                    castlesCount++;
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void PrintAnalysis(){
+        Debug.Log("castlesCount : "+castlesCount);
+        Debug.Log("earthHexCount : "+earthHexCount);
+        Debug.Log("waterHexCount : "+waterHexCount);
+        Debug.Log("totalHexCount : "+totalHexCount);
+    }
+}
+
 public struct ChunkData
 {
     public HexData[,] hexDataMap;
@@ -44,6 +115,7 @@ public class ChunkHandler : MonoBehaviour
 
     // chunk data (save height,biome,etc...)
     private ChunkData[,] chunkData;
+    private WorldData wData;
 
     // unity functions
 
@@ -54,14 +126,10 @@ public class ChunkHandler : MonoBehaviour
         Xgrider = outerSize * square3;
         Ygrider = outerSize * 3/2f;
 
-        // Debug.Log("chunFOV before : "+chunkFOV);
-
         // init chunk fov
         if (this.chunkFOV > (this.worldSizeInChunks-1)/2){
             this.chunkFOV = (int) (this.worldSizeInChunks-1)/2;
         }
-
-        // Debug.Log("chunFOV after : "+chunkFOV);
 
         // first we generate the world map -> BiomeGenerator
         GetComponent<BiomeGenerator>().init();
@@ -72,8 +140,17 @@ public class ChunkHandler : MonoBehaviour
         // then we generate the chunks -> HexChunk
         GenerateChunks();
 
+        // we analyse the world data -> WorldData
+        wData.AnalyseTiles(chunkData);
+
+        int nb_castles = wData.earthHexCount/1000;
+        if (nb_castles == 0 && wData.earthHexCount > 0) nb_castles = 1;
+
         // then we create the castle -> CastleGenerator
-        GetComponent<CastleGenerator>().GenerateCastles();
+        GetComponent<CastleGenerator>().GenerateCastles(nb_castles);
+
+        wData.AnalyseCastles(chunkData);
+        wData.PrintAnalysis();
 
         // then we move the whole map to the center
         transform.position = new Vector3(-worldSizeInChunks*chunkSize*Xgrider/2f,0,-worldSizeInChunks*chunkSize*Ygrider/2f);
@@ -84,9 +161,7 @@ public class ChunkHandler : MonoBehaviour
     }
 
     public void Restart(){
-        
-
-
+    
         GetComponent<BiomeGenerator>().GenerateBiomes();
         SaveChunkData();
         RecreateChunks();
@@ -315,6 +390,11 @@ public class ChunkHandler : MonoBehaviour
     }
 
     public Vector2Int GetRandomEarthCoord(){
+
+        if (wData.earthHexCount <= 0){
+            Debug.Log("no earth left");
+            return new Vector2Int(-1,-1);
+        }
 
         Vector2Int coord = GetRandomCoord();
         while (chunkData[coord.x/chunkSize,coord.y/chunkSize].hexDataMap[coord.x%chunkSize,coord.y%chunkSize].biome == "sea"){

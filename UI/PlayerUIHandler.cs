@@ -9,7 +9,6 @@ public class PlayerUIHandler : MonoBehaviour {
     [SerializeField] private GameObject castleData;
 
 
-
     // unity functions
 
     void Update()
@@ -54,63 +53,44 @@ public class PlayerUIHandler : MonoBehaviour {
     }
 
     public string ToMyString(int i){
-        
-        // todo : remake it with a loop
 
-        if (i < 1000){
-            return i.ToString();
-
-
-        } else if (i < 10000){
-            string s = Mathf.FloorToInt(i/1000f).ToString();
-            s += " ";
-            string s2 = (i%1000).ToString();
-            if (s2.Length < 3)
-                for (int j = 0; j < 3-s2.Length; j++)
-                    s += "0";
-            return s;
-        } else if (i < 100000){
-            string s = Mathf.FloorToInt(i/1000f).ToString();
-            s += ".";
-            string s2 = (Mathf.FloorToInt(i%1000)/100).ToString();
-            if (s2.Length == 1) 
-                s += "0";
-            s += s2;
-            s+= " K";
-            return s;
-        } else if (i < 1000000){
-            return Mathf.FloorToInt(i/1000).ToString() + " K";
-
-            
-        } else if (i < 10000000){
-            string s = Mathf.FloorToInt(i/1000000).ToString();
-            s += ".";
-            string s2 = (Mathf.FloorToInt(i%1000000)/10000).ToString();
-            if (s2.Length == 1)
-                s += "0";
-            s += s2;
-            s += " M";            
-        } else if (i < 100000000){
-            string s = Mathf.FloorToInt(i/1000000).ToString();
-            s += ".";
-            string s2 = (Mathf.FloorToInt(i%1000000)/100000).ToString();
-            s += " M";
-            return s;
-        } else if (i < 1000000000){
-            return Mathf.FloorToInt(i/1000000).ToString() + "M";
-
-
-        } else if (i < 10000000000){
-            string s = Mathf.FloorToInt(i/1000000000).ToString();
-            s += "." + (Mathf.FloorToInt(i%1000000000)/100000000).ToString() + " B";
-            return s;
-        } else if (i < 100000000000){
-            string s = Mathf.FloorToInt(i/1000000000).ToString();
-            s += "." + (Mathf.FloorToInt(i%1000000000)/1000000000).ToString() + " B";
-            return s;
+        if (i < 0){
+            return "-" + ToMyString(-i);
         }
 
-        return Mathf.FloorToInt(i/1000000000).ToString() + "B";
+        float mille = 1000;
+        float million = 1000*mille;
+
+        if (i < 10*mille){
+            return i.ToString();
+        
+        } else if (i < million){
+            return TMS(i,mille,"K");
+        
+        } else if (i < mille*million){
+            return TMS(i,million,"M");
+        
+        } else if (i < million*million){
+            return TMS(i,million*mille,"B");
+        
+        } else if (i < mille*million*million){
+            return TMS(i,million*million,"T");
+        }
+
+        return TMS(i,million*million*mille,"Q");
+    }
+
+    private string TMS(int i,float sol=1000f,string letter="K"){
+
+        // Debug.Log(i + " / " + sol + " = " + i/sol);
+        float f = i/sol;
+        string s = Mathf.FloorToInt(f).ToString();
+        if (s.Length < 3){
+            int nb_dec = 3-s.Length;
+            s = f.ToString("N"+nb_dec.ToString());
+            // Debug.Log(f + " -> " + s);
+        }
+        return s + " " + letter;
 
     }
 
