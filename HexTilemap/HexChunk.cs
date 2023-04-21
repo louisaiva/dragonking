@@ -75,7 +75,7 @@ public class HexChunk : MonoBehaviour {
                 Hex hex = tile.GetComponent<Hex>();
                 hex.outerSize = outerSize;
                 // Debug.Log("refreshing "+hex.name);
-                hex.Refresh(data.hexDataMap[x,y]);
+                hex.SetData(data.hexDataMap[x,y]);
             }
         }
 
@@ -109,7 +109,7 @@ public class HexChunk : MonoBehaviour {
 
     public void RefreshTile(Vector2Int coord,HexData data){
         Hex hex = GetHexAtCoord(coord);
-        hex.Refresh(data);
+        hex.SetData(data);
     }
 
     // helper functions

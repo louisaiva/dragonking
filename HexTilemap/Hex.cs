@@ -17,9 +17,15 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
     // coord
     [ReadOnly] public Vector2Int coord = Vector2Int.zero;
 
+    // hex data
+    private HexData data;
+    [Header("Resources")]
+    [ReadOnly,SerializeField] private List<string> resources;
+    [ReadOnly,SerializeField] private List<float> productions;
+
     // biome functions
 
-    public void SetElements(HexData data)
+    private void SetElements(HexData data)
     {
         // Debug.Log("setting elements to hex " + coord + " with " + data.elements.Count + " elements");
 
@@ -55,6 +61,15 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
 
     }
 
+    public void SetData(HexData data)
+    {
+        if (data.height < 0.001f)
+                data.height = 0.001f;
+        this.data = data;
+        Refresh();
+    }
+
+
     // important functions
 
     public void AddAtPos(GameObject obj, Vector2 pos)
@@ -87,17 +102,10 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
     }
 
     public void Refresh(){
-        if (height < 0.001f)
-                height = 0.001f;
-
-        transform.localScale = new Vector3(outerSize, outerSize,height);
-    }
-
-    public void Refresh(HexData data){
 
         // set height
+        transform.localScale = new Vector3(outerSize, outerSize,data.height);
         height = data.height;
-        Refresh();
 
         // set biome
         biome = data.biome;
@@ -105,7 +113,18 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
         // set material
         Material mat = transform.parent.GetComponent<HexChunk>().bGen.GetMaterial(data.biome);
         SetMaterial(mat);
+
+        // set elements
         SetElements(data);
+
+        // refresh resources
+        RefreshResources();
+    }
+
+    private void RefreshResources()
+    {
+        // set resources
+        (resources,productions) = data.getResourceTuple();
     }
 
     // hoover
@@ -210,6 +229,10 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
         Vector2Int cCoord = transform.parent.GetComponent<HexChunk>().GetCoord();
         Vector2Int cSize = transform.parent.GetComponent<HexChunk>().GetSize();
         return new Vector2Int(cCoord.x*cSize.x + coord.x,cCoord.y*cSize.y + coord.y);
+    }
+
+    public Vector2Int GetChunkCoord(){
+        return transform.parent.GetComponent<HexChunk>().GetCoord();
     }
 
     public float GetHeight(){

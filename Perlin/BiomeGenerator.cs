@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 using System.Linq;
 
 
-public struct BiomesConfiguration{
+public struct Configuration{
 
     // 1st step : height
     public Dictionary<string,float> min_height; // 0 - 10
@@ -22,6 +22,7 @@ public struct BiomesConfiguration{
 
     // biome data, elements etc
     public Dictionary<string,List<string>> elements;
+    public Dictionary<string,Dictionary<string,float>> resources;
     public Dictionary<string,List<string>> data_elements;
     public Dictionary<string,List<float>> data_probs;
     public Dictionary<string,List<int>> data_quants;
@@ -63,6 +64,27 @@ public struct BiomesConfiguration{
         colors2 = new Dictionary<string, Color>();
         materials = new Dictionary<string, Material>();
         materials2 = new Dictionary<string, Material>();
+    }
+
+    public string getElementFromFBXName(string name){
+        foreach (KeyValuePair<string,List<string>> entry in elements){
+            if (entry.Value.Contains(name)){
+                return entry.Key;
+            }
+        }
+        return "";
+        
+    }
+
+    public (string,float) getResourceFromElement(string element){
+        foreach (KeyValuePair<string,Dictionary<string,float>> entry in resources){
+            foreach (KeyValuePair<string,float> entry2 in entry.Value){
+                if (entry2.Key == element){
+                    return (entry.Key,entry2.Value);
+                }
+            }
+        }
+        return ("",0f);
     }
 
 }
@@ -128,7 +150,7 @@ public class BiomeGenerator : MonoBehaviour
 
     // conf
     private string json_conf;
-    private BiomesConfiguration conf;
+    private Configuration conf;
     private Texture2D biomesPNG;
     private Dictionary<string,Color> colors = new Dictionary<string, Color>();
     private string biome_settings_json_path = "Assets/Scripts/JSON/biomes_conf.json";
@@ -293,10 +315,10 @@ public class BiomeGenerator : MonoBehaviour
 
     // helper functions
 
-    private BiomesConfiguration LoadBiomesConf(string p) {
+    private Configuration LoadBiomesConf(string p) {
         json_conf = System.IO.File.ReadAllText(p);
         Debug.Log("Loaded biomes settings from " + p);
-        BiomesConfiguration c = JsonConvert.DeserializeObject<BiomesConfiguration>(json_conf);
+        Configuration c = JsonConvert.DeserializeObject<Configuration>(json_conf);
         c.LoadColors(main_mat);
         // c.loaded = true;
 
@@ -305,7 +327,7 @@ public class BiomeGenerator : MonoBehaviour
         return c;
     }
 
-    private void SaveBiomesConf(BiomesConfiguration c,string p) {
+    private void SaveBiomesConf(Configuration c,string p) {
         c.EraseColors();
         json_conf = JsonConvert.SerializeObject(c);
         System.IO.File.WriteAllText(p, json_conf);
@@ -438,7 +460,7 @@ public class BiomeGenerator : MonoBehaviour
         return h;
     }
 
-    public BiomesConfiguration GetConf() {
+    public Configuration GetConf() {
         return conf;
     }
 
@@ -458,7 +480,6 @@ public class BiomeGenerator : MonoBehaviour
         
     }
     
-
     public HexData GenerateHexData(Vector2Int coo){
 
         // generate trees,rocks,etc... based on biome
@@ -474,15 +495,15 @@ public class BiomeGenerator : MonoBehaviour
         // generate trees,rocks,etc... based on biome
         data.elements = GenerateHexElements(data.biome);
 
+        // generate resource and production based on elements
+        data.CalculateResourceProduction(conf);
+
         return data;
     }
 
     public List<GameObject> GenerateHexElements(string b)
     {
         List<GameObject> data = new List<GameObject>();
-
-        // get biome config
-        // BiomesConfiguration bConf = GetComponent<BiomeGenerator>().GetConf();
 
         // create data based on biome
         for (int index_element = 0; index_element < conf.data_elements[b].Count; index_element++)
@@ -502,6 +523,7 @@ public class BiomeGenerator : MonoBehaviour
 
                     // create element
                     GameObject obj = Instantiate(Resources.Load("fbx/" + fbx_name)) as GameObject;
+                    obj.name = fbx_name;
                     obj.transform.localPosition = new Vector3(x, z, 1);
 
                     // add to list

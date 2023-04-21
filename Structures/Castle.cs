@@ -140,7 +140,7 @@ public struct CastleResources
 
 }
 
-public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
+public class Castle : MonoBehaviour, I_Building
 {
 
     // castle
@@ -167,7 +167,12 @@ public class Castle : MonoBehaviour, I_HasUI, I_Hooverable, I_Clickable
     [ReadOnly,SerializeField] private int goldVisu;
 
 
-    // buildings
+    // building
+    public string resource { get; set;}
+    public float production { get; set;}
+    public int range { get; set;}
+
+    // 
     private List<I_Building> buildings;
 
 

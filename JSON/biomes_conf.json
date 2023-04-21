@@ -42,6 +42,20 @@
         "jungletree" : ["tree_jungle_1"],
         "rock" : ["rock_1","rock_2","rock_3"],
         "grass" : ["grass_1","grass_2"]
+        
+    },
+
+    "resources":
+    {
+        "wood" : {
+            "epicea" : 1,
+            "sapin" : 1,
+            "redtree" : 2,
+            "jungletree" : 3
+        },
+        "stone" : {
+            "rock" : 1
+        }
     },
 
     "data_elements":

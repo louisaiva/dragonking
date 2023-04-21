@@ -39,7 +39,12 @@ public class CameraAsPlayer : MonoBehaviour
         {
             selection_details.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = selectedObject.GetHex().GetBiome();
             selection_details.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = "x:y = " + selectedObject.GetHex().GetCoord().x + ":" + selectedObject.GetHex().GetCoord().y;
-            selection_details.transform.GetChild(2).GetComponent<TextMeshProUGUI>().text = "height = " + selectedObject.GetHex().GetHeight().ToString("n2");
+
+            string chunk_xy = "(" + selectedObject.GetHex().GetChunkCoord().x + ":" + selectedObject.GetHex().GetChunkCoord().y + ")";
+            chunk_xy += " - (" + selectedObject.GetHex().coord.x + ":" + selectedObject.GetHex().coord.y + ")";
+
+            selection_details.transform.GetChild(2).GetComponent<TextMeshProUGUI>().text = chunk_xy;
+            selection_details.transform.GetChild(3).GetComponent<TextMeshProUGUI>().text = "height = " + selectedObject.GetHex().GetHeight().ToString("n2");
             selection_details.SetActive(true);
         }
         else

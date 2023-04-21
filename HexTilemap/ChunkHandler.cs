@@ -83,6 +83,44 @@ public struct HexData
     public List<GameObject> elements;
     public string biome;
     public float height;
+
+    // resource
+    public Dictionary<string, float> resources;
+
+    public void CalculateResourceProduction(Configuration conf){
+        
+        // init
+        resources = new Dictionary<string, float>();
+
+        // calculate
+        foreach (GameObject go in elements)
+        {
+            string res;
+            float prod;
+
+            string element = conf.getElementFromFBXName(go.name);
+            (res, prod) = conf.getResourceFromElement(element);
+
+            if (resources.ContainsKey(res)){
+                resources[res] += prod;
+            } else {
+                resources.Add(res, prod);
+            }
+        }
+    }
+
+    public (List<string>,List<float>) getResourceTuple(){
+        List<string> res = new List<string>();
+        List<float> prod = new List<float>();
+        int i = 0;
+        foreach (KeyValuePair<string, float> entry in resources)
+        {
+            res.Add(entry.Key);
+            prod.Add(entry.Value);
+            i++;
+        }
+        return (res,prod);
+    }
 }
 
 public class ChunkHandler : MonoBehaviour
@@ -413,6 +451,16 @@ public class ChunkHandler : MonoBehaviour
     }
     public Vector2Int GetHexCoordFromGlobalHexCoord(Vector2Int coord){
         return new Vector2Int(coord.x%chunkSize,coord.y%chunkSize);
+    }
+
+
+    // HEXAGONAL GRID
+
+    public List<Hex> GetHexsInRange(Vector2Int coord,int range){
+
+        List<Hex> hexs = new List<Hex>();
+
+        return hexs;
     }
 
 }
