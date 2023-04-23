@@ -55,8 +55,6 @@ public class HexChunk : MonoBehaviour {
 
     public void RefreshChunk(ChunkData data){
 
-        // Debug.Log("refreshing chunk "+chunkPosition);
-
         // create grid
         for (int y=0; y<data.hexDataMap.GetLength(1); y++) {
             for (int x=0; x<data.hexDataMap.GetLength(0); x++) {

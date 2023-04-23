@@ -199,12 +199,7 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
         return this;
     }
 
-    // helpers
-
-    public Vector2Int GetChunkPosition()
-    {
-        return transform.parent.GetComponent<HexChunk>().chunkPosition;
-    }
+    // setters
 
     public void SetMaterial(Material material){
         GetComponent<MeshRenderer>().material = material;
@@ -225,7 +220,7 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
         return biome;
     }
 
-    public Vector2Int GetCoord(){
+    public Vector2Int GetGlobalCoord(){
         Vector2Int cCoord = transform.parent.GetComponent<HexChunk>().GetCoord();
         Vector2Int cSize = transform.parent.GetComponent<HexChunk>().GetSize();
         return new Vector2Int(cCoord.x*cSize.x + coord.x,cCoord.y*cSize.y + coord.y);

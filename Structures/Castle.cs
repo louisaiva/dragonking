@@ -347,9 +347,9 @@ public class Castle : MonoBehaviour, I_Building
         return transform.position;
     }
 
-    public Vector2Int GetChunkPosition()
+    public Vector2Int GetChunkCoord()
     {
-        return transform.parent.GetComponent<Hex>().GetChunkPosition();
+        return transform.parent.GetComponent<Hex>().GetChunkCoord();
     }
 
     public Hex GetHex()

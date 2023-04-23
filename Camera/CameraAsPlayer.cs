@@ -38,7 +38,7 @@ public class CameraAsPlayer : MonoBehaviour
         if (selectedObject != null)
         {
             selection_details.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = selectedObject.GetHex().GetBiome();
-            selection_details.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = "x:y = " + selectedObject.GetHex().GetCoord().x + ":" + selectedObject.GetHex().GetCoord().y;
+            selection_details.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = "x:y = " + selectedObject.GetHex().GetGlobalCoord().x + ":" + selectedObject.GetHex().GetGlobalCoord().y;
 
             string chunk_xy = "(" + selectedObject.GetHex().GetChunkCoord().x + ":" + selectedObject.GetHex().GetChunkCoord().y + ")";
             chunk_xy += " - (" + selectedObject.GetHex().coord.x + ":" + selectedObject.GetHex().coord.y + ")";
@@ -202,7 +202,7 @@ public class CameraAsPlayer : MonoBehaviour
     {
         if (selectedObject != null)
         {
-            return selectedObject.GetChunkPosition();
+            return selectedObject.GetChunkCoord();
         }
         else
         {

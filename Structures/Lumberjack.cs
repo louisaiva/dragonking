@@ -85,9 +85,9 @@ public class Lumberjack : MonoBehaviour, I_Building
         return transform.position;
     }
 
-    public Vector2Int GetChunkPosition()
+    public Vector2Int GetChunkCoord()
     {
-        return GetHex().GetChunkPosition();
+        return GetHex().GetChunkCoord();
     }
 
     public Hex GetHex()

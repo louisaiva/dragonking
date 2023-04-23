@@ -123,6 +123,90 @@ public struct HexData
     }
 }
 
+// coordinates system
+
+public struct qrs
+{
+    public int q;
+    public int r;
+    public int s;
+
+    public qrs(int q, int r, int s)
+    {
+        this.q = q;
+        this.r = r;
+        this.s = s;
+    }
+
+    public xy to_xy()
+    {
+        int y = this.r;
+        int x = this.q + (this.r + (this.r&1)) / 2;
+        return new xy(x,y);   
+    }
+
+    public qr to_qr()
+    {
+        return new qr(q,r);
+    }
+}
+
+public struct qr
+{
+    public int q;
+    public int r;
+
+    public qr(int q, int r)
+    {
+        this.q = q;
+        this.r = r;
+    }
+
+    public qr(Vector2Int v)
+    {
+        xy vec = new xy(v);
+        this = vec.to_qr();
+    }
+
+    public xy to_xy()
+    {
+        int y = this.r;
+        int x = this.q + (this.r + (this.r&1)) / 2;
+        return new xy(x,y);   
+    }
+    
+    public qrs to_qrs()
+    {
+        int s = -this.q - this.r;
+        return new qrs(this.q,this.r,s);
+    }
+}
+
+public struct xy
+{
+    public int x;
+    public int y;
+
+    public xy(int x, int y)
+    {
+        this.x = x;
+        this.y = y;
+    }
+
+    public xy(Vector2Int v)
+    {
+        this.x = v.x;
+        this.y = v.y;
+    }
+
+    public qr to_qr()
+    {
+        int q = this.x - (this.y + (this.y&1)) / 2;
+        int r = this.y;
+        return new qr(q,r);
+    }
+}
+
 public class ChunkHandler : MonoBehaviour
 {
 
@@ -222,12 +306,13 @@ public class ChunkHandler : MonoBehaviour
             lastChunk = currentChunk;
         }
 
-        /* // change hex biome at random coord
-        Vector2Int coord = new Vector2Int(Random.Range(0,chunkSize),Random.Range(0,chunkSize));
-        Vector2Int chunk = new Vector2Int(Random.Range(0,worldSizeInChunks),Random.Range(0,worldSizeInChunks));
-        ClearTileElements(chunk,coord);
-        ChangeTileBiome(chunk,coord,"ocyan");
-        RefreshTile(chunk,coord); */
+        // change hex biome in hex range
+        int range = 5;
+        List<Hex> hexes = GetHexesInRange(GetWorldMidHex().GetGlobalCoord(),range);
+        xy coo = new xy(hexes[Random.Range(0,hexes.Count)].GetGlobalCoord());
+        ClearTileElements(coo);
+        ChangeTileBiome(coo,"ocyan");
+        RefreshTile(coo);
     }
 
     void OnValidate()
@@ -360,27 +445,43 @@ public class ChunkHandler : MonoBehaviour
 
     // add delete elements to tile
 
-    private void AddToTileData(Vector2Int ch_coo,Vector2Int hex_coo,GameObject element){
+    private void AddToTileData(xy coo,GameObject element){
+
+        // convert to chunk and hex coords
+        Vector2Int ch_coo = GetChunkCoordFromXY(coo);
+        Vector2Int hex_coo = GetHexCoordFromXY(coo);
 
         // get hex data
         List<GameObject> elements = chunkData[ch_coo.x,ch_coo.y].hexDataMap[hex_coo.x,hex_coo.y].elements;
         elements.Add(element);
     }
 
-    private void RefreshTile(Vector2Int ch_coo,Vector2Int hex_coo){
+    private void RefreshTile(xy coo){
+
+        // convert to chunk and hex coords
+        Vector2Int ch_coo = GetChunkCoordFromXY(coo);
+        Vector2Int hex_coo = GetHexCoordFromXY(coo);
 
         // get hex data
         HexData data = chunkData[ch_coo.x,ch_coo.y].hexDataMap[hex_coo.x,hex_coo.y];
         chunks[ch_coo.x + ch_coo.y*worldSizeInChunks].GetComponent<HexChunk>().RefreshTile(hex_coo,data);
     }
 
-    private void ClearTileElements(Vector2Int ch_coo,Vector2Int hex_coo){
+    private void ClearTileElements(xy coo){
+
+        // convert to chunk and hex coords
+        Vector2Int ch_coo = GetChunkCoordFromXY(coo);
+        Vector2Int hex_coo = GetHexCoordFromXY(coo);
 
         // get hex data
         chunkData[ch_coo.x,ch_coo.y].hexDataMap[hex_coo.x,hex_coo.y].elements = new List<GameObject>();
     }
 
-    private void ChangeTileBiome(Vector2Int ch_coo,Vector2Int hex_coo,string biome){
+    private void ChangeTileBiome(xy coo,string biome){
+
+        // convert to chunk and hex coords
+        Vector2Int ch_coo = GetChunkCoordFromXY(coo);
+        Vector2Int hex_coo = GetHexCoordFromXY(coo);
 
         // set hex data
         chunkData[ch_coo.x,ch_coo.y].hexDataMap[hex_coo.x,hex_coo.y].biome = biome;
@@ -388,17 +489,16 @@ public class ChunkHandler : MonoBehaviour
 
     public void SetElementToTile(Vector2Int global_coord,GameObject element){
 
-        Vector2Int ch_coo = GetChunkCoordFromGlobalHexCoord(global_coord);
-        Vector2Int hex_coo = GetHexCoordFromGlobalHexCoord(global_coord);
+        xy coo = new xy(global_coord);
 
         // clear tile data
-        ClearTileElements(ch_coo,hex_coo);
+        ClearTileElements(coo);
 
         // add to tile data
-        AddToTileData(ch_coo,hex_coo,element);
+        AddToTileData(coo,element);
 
         // refresh tile
-        RefreshTile(ch_coo,hex_coo);
+        RefreshTile(coo);
     }
 
     public HexData GetTileData(Vector2Int global_coord){
@@ -453,14 +553,54 @@ public class ChunkHandler : MonoBehaviour
         return new Vector2Int(coord.x%chunkSize,coord.y%chunkSize);
     }
 
+    public Vector2Int GetChunkCoordFromXY(xy coord){
+        return new Vector2Int(coord.x/chunkSize,coord.y/chunkSize);
+    }
+    public Vector2Int GetHexCoordFromXY(xy coord){
+        return new Vector2Int(coord.x%chunkSize,coord.y%chunkSize);
+    }
+
+    public Hex GetHexAtGlobalCoord(Vector2Int coord){
+        Vector2Int ch_coo = GetChunkCoordFromGlobalHexCoord(coord);
+        Vector2Int hex_coo = GetHexCoordFromGlobalHexCoord(coord);
+
+        int ch_index = ch_coo.x + ch_coo.y*worldSizeInChunks;
+
+        return chunks[ch_index].GetComponent<HexChunk>().GetHexAtCoord(hex_coo);
+    }
+
+    public Hex GetHexAtXY(xy coo){
+        Vector2Int ch_coo = GetChunkCoordFromXY(coo);
+        Vector2Int hex_coo = GetHexCoordFromXY(coo);
+
+        int ch_index = ch_coo.x + ch_coo.y*worldSizeInChunks;
+
+        return chunks[ch_index].GetComponent<HexChunk>().GetHexAtCoord(hex_coo);
+    }
 
     // HEXAGONAL GRID
 
-    public List<Hex> GetHexsInRange(Vector2Int coord,int range){
+    public List<Hex> GetHexesInRange(Vector2Int coord,int range){
 
-        List<Hex> hexs = new List<Hex>();
+        qr coo = new qr(coord);
+        return GetHexesInRangeQR(coo,range);
 
-        return hexs;
     }
 
+    public List<Hex> GetHexesInRangeQR(qr coord,int range){
+
+        // Debug.Log("AHHHHHHHHHHH : "+range);
+
+        List<Hex> result = new List<Hex>();
+        for (int q = -range; q <= range; q++)
+        {
+            for (int r = Mathf.Max(-range,-q-range); r <= Mathf.Min(range,-q+range); r++)
+            {
+                // Debug.Log("q : "+q+" r : "+r);
+                qr hex_coo = new qr(coord.q+q,coord.r+r);
+                result.Add(GetHexAtXY(hex_coo.to_xy()));
+            }
+        }
+        return result;
+    }
 }
