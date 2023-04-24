@@ -110,8 +110,8 @@ public class HexChunk : MonoBehaviour {
         hex.SetData(data);
     }
 
-    // helper functions
-
+    // getters
+    
     public Vector3 GetPositionForHexFromCoord(Vector2Int coordinates){
         
         int column = coordinates.x;
@@ -142,11 +142,16 @@ public class HexChunk : MonoBehaviour {
     }
 
     public Hex GetHexAtCoord(Vector2Int coordinates){
+        
+        if (coordinates.x < 0 || coordinates.x >= chunkSize.x || coordinates.y < 0 || coordinates.y >= chunkSize.y){
+            return null;
+        }
+
         return transform.GetChild(coordinates.y * chunkSize.x + coordinates.x).GetComponent<Hex>();
     }
 
     public Vector3 GetPositionOfCenterHex(){
-        return GetHexAtCoord(new Vector2Int(chunkSize.x/2,chunkSize.y/2)).GetRecenterPosition();
+        return GetMidHex().GetRecenterPosition();
     }
 
     public Hex GetMidHex(){
@@ -159,6 +164,10 @@ public class HexChunk : MonoBehaviour {
 
     public Vector2Int GetSize(){
         return chunkSize;
+    }
+
+    public ChunkHandler GetHexHandler(){
+        return transform.parent.GetComponent<ChunkHandler>();
     }
 
 }

@@ -5,6 +5,8 @@ using UnityEngine;
 public class CastleGenerator : MonoBehaviour
 {
 
+    [Header("Castles")]
+
     // player
     [SerializeField] private GameObject player;
 
@@ -16,6 +18,10 @@ public class CastleGenerator : MonoBehaviour
 
     // material
     [ReadOnly,SerializeField] private Material matWall;
+
+    [Header("Buildings")]
+    [SerializeField] private GameObject lumberjackFBX;
+    private int lbj_nb = 0;
 
     // unity functions
 
@@ -42,6 +48,10 @@ public class CastleGenerator : MonoBehaviour
         // set player castle
         if (castles.Count > 0)
             player.GetComponent<PlayerUIHandler>().SetCastle(castles[0]);
+
+
+        // generate buildings
+        GenerateBuildings(nombreCastles);
     }
 
     public void RegenerateCastles(){
@@ -55,6 +65,16 @@ public class CastleGenerator : MonoBehaviour
 
         // regenerate
         GenerateCastles();
+
+    }
+
+    public void GenerateBuildings(int nombreBuildings = 1){
+
+        // generate buildings at random coords
+        for (int i = 0; i < nombreBuildings; i++)
+        {
+            GenerateBuildingAtRandomCoord();
+        }
 
     }
 
@@ -82,6 +102,21 @@ public class CastleGenerator : MonoBehaviour
         GetComponent<ChunkHandler>().SetElementToTile(pos,castle);
         HexData data = GetComponent<ChunkHandler>().GetTileData(pos);
 
+    }
+
+    public void GenerateBuildingAtRandomCoord()
+    {
+        GameObject building = Instantiate(lumberjackFBX);
+        building.AddComponent<Lumberjack>();
+        building.name = "lumberjack " + (lbj_nb).ToString();
+        lbj_nb++;
+        building.AddComponent<MeshCollider>();
+        
+        // random coord
+        Vector2Int pos = GetComponent<ChunkHandler>().GetRandomEarthCoord();
+
+        // apply to hex data
+        GetComponent<ChunkHandler>().SetElementToTile(pos,building);
     }
 
     // helper functions

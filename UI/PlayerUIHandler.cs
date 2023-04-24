@@ -26,7 +26,7 @@ public class PlayerUIHandler : MonoBehaviour {
 
     public void UpdateResourcesUI(){
         
-        CastleResources res = castle.GetResources();
+        ResourcesHandler res = castle.GetResourcesHandler();
 
         string[] resources = {"food","wood","stone","gold"};
         foreach (string resource in resources)

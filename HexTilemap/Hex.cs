@@ -161,6 +161,7 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
         {
             if (child.GetComponent<I_Hooverable>() != null)
             {
+                // Debug.Log("changing layer of " + child.name);
                 child.gameObject.layer = LayerMask.NameToLayer("selectable");
                 foreach (Transform child2 in child)
                 {
@@ -232,6 +233,14 @@ public class Hex : MonoBehaviour, I_Hooverable, I_Clickable
 
     public float GetHeight(){
         return height;
+    }
+
+    public HexChunk GetChunk(){
+        return transform.parent.GetComponent<HexChunk>();
+    }
+
+    public HexData GetData(){
+        return data;
     }
 
 }

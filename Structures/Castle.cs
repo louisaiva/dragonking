@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public struct CastleResources
+public struct ResourcesHandler
 {
     // static
     public float foodQty;
@@ -159,7 +159,7 @@ public class Castle : MonoBehaviour, I_Building
 
 
     // resources
-    private CastleResources resources;
+    private ResourcesHandler resources;
     [ReadOnly,SerializeField] private int foodVisu;
     [ReadOnly,SerializeField] private int woodVisu;
     [ReadOnly,SerializeField] private int stoneVisu;
@@ -171,6 +171,7 @@ public class Castle : MonoBehaviour, I_Building
     public string resource { get; set;}
     public float production { get; set;}
     public int range { get; set;}
+    public Dictionary<string, float> inventory { get; set; }
 
     // 
     private List<I_Building> buildings;
@@ -198,7 +199,7 @@ public class Castle : MonoBehaviour, I_Building
         currentLife = Mathf.RoundToInt(Random.Range(10, maxLife));
 
         // resources
-        resources = new CastleResources();
+        resources = new ResourcesHandler();
         resources.randomize();
 
         // ui
@@ -221,6 +222,53 @@ public class Castle : MonoBehaviour, I_Building
         goldVisu = resources.getQty("gold");
 
     }
+
+    // building
+
+    public void UpdateProduction()
+    {
+        // init
+        production = 0f;
+
+        // get the list of all hexs in range
+        List<Hex> hexsInRange = GetHex().GetChunk().GetHexHandler().GetHexesInRange(GetHex().GetGlobalCoord(), range);
+        for (int i = 0; i < hexsInRange.Count; i++)
+        {
+            HexData data = hexsInRange[i].GetData();
+            production += data.getResourceProduction(resource);
+        }
+    }
+
+    public void Produce()
+    {
+        // we need to add the ticked_diff to the qty
+        float multiplier = Time.deltaTime / 3600f;
+        float produced_by_tick = production * multiplier;
+
+        // add to inventory
+        if (inventory.ContainsKey(resource))
+        {
+            inventory[resource] += produced_by_tick;
+        }
+        else
+        {
+            inventory.Add(resource, produced_by_tick);
+        }
+    }
+
+    public List<string> GetResources(){
+        return new List<string>(inventory.Keys);
+    }
+
+    public Dictionary<string, float> GetInventory(){
+        return inventory;
+    }
+
+    public string GetName()
+    {
+        return castleName;
+    }
+
 
     // interaction
 
@@ -265,11 +313,6 @@ public class Castle : MonoBehaviour, I_Building
     }
 
     // getters
-
-    public string GetName()
-    {
-        return castleName;
-    }
 
     public Color GetColor()
     {
@@ -357,7 +400,7 @@ public class Castle : MonoBehaviour, I_Building
         return transform.parent.GetComponent<Hex>();
     }
 
-    public CastleResources GetResources()
+    public ResourcesHandler GetResourcesHandler()
     {
         return resources;
     }

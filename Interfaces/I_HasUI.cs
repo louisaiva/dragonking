@@ -8,5 +8,5 @@ public interface I_HasUI
     void ShowUI();
     void HideUI();
     void SwitchUI();
-    void UpdateUI();
+    // void UpdateUI();
 }

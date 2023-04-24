@@ -6,9 +6,12 @@ using UnityEngine.UI;
 public class Lumberjack : MonoBehaviour, I_Building
 {
     // building
-    public string resource { get; set;}
-    public float production { get; set;}
-    public int range { get; set;}
+    [SerializeField] public string resource { get; set;}
+    [SerializeField] public float production { get; set;}
+    [SerializeField] public int range { get; set;}
+    public Dictionary<string, float> inventory { get; set; }
+
+    private float sleepin_tick = 0f;
 
     // ui
     public GameObject ui { get; set; }
@@ -17,22 +20,103 @@ public class Lumberjack : MonoBehaviour, I_Building
 
     void Start()
     {
+        // init building
         resource = "wood";
         production = 0f;
         range = 4;
+
+        // init inventory
+        inventory = new Dictionary<string, float>();
+        inventory.Add(resource, production);
+
+        // init ui
+        InitUI();
     }
 
     void Update()
     {
         UpdateProduction();
+        Produce();
+    }
+
+    void OnDisable()
+    {
+        Debug.Log(name + " was disabled");
+
+        // set sleeping tick
+        sleepin_tick = Time.time;
+
+    }
+
+    void OnEnable()
+    {
+        Debug.Log(name + " was enabled");
+        if (inventory == null || sleepin_tick == 0f)
+            return;
+        
+        // add the sleeping time to the inventory
+        float multiplier = (Time.time - sleepin_tick) / 3600f;
+        float produced_by_tick = production * multiplier;
+
+        // add to inventory
+        if (inventory.ContainsKey(resource))
+        {
+            inventory[resource] += produced_by_tick;
+        }
+        else
+        {
+            inventory.Add(resource, produced_by_tick);
+        }
+
+        // reset sleeping tick
+        sleepin_tick = 0f;
+        
     }
 
     // methods
 
     public void UpdateProduction()
     {
+        // init
+        production = 0f;
+
         // get the list of all hexs in range
-        // List<Hex> hexsInRange = HexMap.instance.GetHexsInRange(GetHex().GetCoord(), range);
+        List<Hex> hexsInRange = GetHex().GetChunk().GetHexHandler().GetHexesInRange(GetHex().GetGlobalCoord(), range);
+        for (int i = 0; i < hexsInRange.Count; i++)
+        {
+            HexData data = hexsInRange[i].GetData();
+            production += data.getResourceProduction(resource);
+        }
+    }
+
+    public void Produce()
+    {
+        // we need to add the ticked_diff to the qty
+        float multiplier = Time.deltaTime / 3600f;
+        float produced_by_tick = production * multiplier;
+
+        // add to inventory
+        if (inventory.ContainsKey(resource))
+        {
+            inventory[resource] += produced_by_tick;
+        }
+        else
+        {
+            inventory.Add(resource, produced_by_tick);
+        }
+    }
+
+    public List<string> GetResources(){
+        return new List<string>(inventory.Keys);
+    }
+
+    public Dictionary<string, float> GetInventory(){
+        return inventory;
+    }
+
+    public string GetName()
+    {
+        return "Lumberjack";
     }
 
     // hoover
@@ -112,8 +196,16 @@ public class Lumberjack : MonoBehaviour, I_Building
         ui.SetActive(!ui.activeSelf);
     }
 
-    public void UpdateUI()
+    void InitUI()
     {
-        throw new System.NotImplementedException();
+        // create ui
+        ui = Instantiate(Resources.Load("Prefabs/UI/simpleUI"),GameObject.Find("/canva/buildings").transform) as GameObject;
+        ui.gameObject.name = this.name + "_UI";
+
+        // set ui parameters
+        ui.GetComponent<SimpleUI>().init(this);
+
+        HideUI();
     }
+
 }

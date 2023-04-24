@@ -121,6 +121,14 @@ public struct HexData
         }
         return (res,prod);
     }
+
+    public float getResourceProduction(string res){
+        if (resources.ContainsKey(res)){
+            return resources[res];
+        } else {
+            return 0;
+        }
+    }
 }
 
 // coordinates system
@@ -285,7 +293,7 @@ public class ChunkHandler : MonoBehaviour
     public void Restart(){
     
         GetComponent<BiomeGenerator>().GenerateBiomes();
-        SaveChunkData();
+        SaveChunkData(); 
         RecreateChunks();
         GetComponent<CastleGenerator>().RegenerateCastles();
         RefreshChunks();
@@ -307,12 +315,12 @@ public class ChunkHandler : MonoBehaviour
         }
 
         // change hex biome in hex range
-        int range = 5;
+        /* int range = 5;
         List<Hex> hexes = GetHexesInRange(GetWorldMidHex().GetGlobalCoord(),range);
         xy coo = new xy(hexes[Random.Range(0,hexes.Count)].GetGlobalCoord());
         ClearTileElements(coo);
         ChangeTileBiome(coo,"ocyan");
-        RefreshTile(coo);
+        RefreshTile(coo); */
     }
 
     void OnValidate()
@@ -575,6 +583,11 @@ public class ChunkHandler : MonoBehaviour
 
         int ch_index = ch_coo.x + ch_coo.y*worldSizeInChunks;
 
+        if (ch_index < 0 || ch_index >= chunks.Count){
+            // Debug.Log("ch_index : "+ch_index);
+            return null;
+        }
+
         return chunks[ch_index].GetComponent<HexChunk>().GetHexAtCoord(hex_coo);
     }
 
@@ -598,7 +611,9 @@ public class ChunkHandler : MonoBehaviour
             {
                 // Debug.Log("q : "+q+" r : "+r);
                 qr hex_coo = new qr(coord.q+q,coord.r+r);
-                result.Add(GetHexAtXY(hex_coo.to_xy()));
+                Hex hex = GetHexAtXY(hex_coo.to_xy());
+                if (hex != null)
+                    result.Add(hex); 
             }
         }
         return result;
