@@ -29,3 +29,4 @@ public class CastleUI : MonoBehaviour
         transform.Find("panel_B/life_bar/fill").GetComponent<RectTransform>().sizeDelta = new Vector2(castle.GetCurrentLife(), transform.Find("panel_B/life_bar/fill").GetComponent<RectTransform>().sizeDelta.y);
     }
 }
+ 

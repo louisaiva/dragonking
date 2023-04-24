@@ -302,7 +302,7 @@ public class Castle : MonoBehaviour, I_Building
     void InitUI()
     {
         // create ui
-        ui = Instantiate(Resources.Load("Prefabs/UI/castleUI"),GameObject.Find("/canva").transform) as GameObject;
+        ui = Instantiate(Resources.Load("Prefabs/UI/castleUI"),GameObject.Find("/canva/castles").transform) as GameObject;
         //ui.transform.parent = GameObject.Find("Canvas").transform;
         ui.gameObject.name = this.castleName + "_UI";
 
