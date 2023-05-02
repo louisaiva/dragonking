@@ -41,7 +41,7 @@ public class Lumberjack : MonoBehaviour, I_Building
  
     void OnDisable()
     {
-        Debug.Log(name + " was disabled");
+        // Debug.Log(name + " was disabled");
 
         // set sleeping tick
         sleepin_tick = Time.time;
@@ -50,7 +50,7 @@ public class Lumberjack : MonoBehaviour, I_Building
 
     void OnEnable()
     {
-        Debug.Log(name + " was enabled");
+        // Debug.Log(name + " was enabled");
         if (inventory == null || sleepin_tick == 0f)
             return;
         
@@ -203,7 +203,7 @@ public class Lumberjack : MonoBehaviour, I_Building
         ui.gameObject.name = this.name + "_UI";
 
         // set ui parameters
-        ui.GetComponent<SimpleUI>().init(this);
+        ui.GetComponent<RessourceUI>().init(this);
 
         HideUI();
     }

@@ -1,0 +1,23 @@
+
+{
+    "names":["Zareth","Kaelin","Faelan","Eirlys","Niamh","Evangeline",
+            "Eryndor","Thalia","Rhiannon","Alaric","Lyrisa","Galadriel",
+            "Sariel","Orinthea","Drystan","Arin","Celandine","Lysandra","Eiluned",
+            "Arianna","Sylas","Lirien","Kaelan","Isadora","Theron","Aria","Emrys",
+            "Zephyr","Yara","Orion","Eamon","Seraphina","Eirik","Leif",
+            "Tanwen","Solas","Darian","Ophelia"],
+
+    "classes":["military","craftsman","scholar","artist","laborer","religious","merchant","aristocracy"],
+
+    "races":["human","elf","dwarf","orc","goblin","halfling","gnome","troll","ogre","giant","dragon","demon"
+            ,"angel","fairy","undead","beast","elemental","construct","plant","aberration","outsider","fey",
+            "ooze","vermin","shapechanger","humanoid"],
+
+    "origins":["Avaria","Caeloria","Daeland","Eolande","Faeloria"
+            ,"Glorania","Halvandor","Iveria","Jorundr","Kaelorin","Liria"
+            ,"Mirandor","Naeloria","Orlandria","Peloria","Quinor","Rendara"
+            ,"Sylphor","Tavaria","Uldorin"]
+    
+}
+
+

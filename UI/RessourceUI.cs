@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SimpleUI : MonoBehaviour
+public class RessourceUI : MonoBehaviour
 {
     [ReadOnly,SerializeField] private I_Building building;
 
@@ -44,21 +44,6 @@ public class SimpleUI : MonoBehaviour
         // set the total height of the ui
         GetComponent<RectTransform>().sizeDelta = new Vector2(GetComponent<RectTransform>().sizeDelta.x,resources.Count*height_resource_panel + 50);
 
-
-
-
-
-        /* // set the resources panels
-        for (int i=0; i<building.GetResources().Count; i++)
-        {
-            // add image component
-            Image img_component = transform.Find("resources/" + building.GetResources()[i]).gameObject.AddComponent<Image>();
-
-            // set the sprite
-            Sprite[] sprites = Resources.LoadAll<Sprite>("px/items");
-            img_component.sprite = sprites[Random.Range(0, sprites.Length)];
-        }
-        */
     }
 
     public void Update(){
@@ -79,7 +64,7 @@ public class SimpleUI : MonoBehaviour
                 if (prod > 0){
                     s += "+";
                 }
-                s += prod.ToString() + ")";
+                s += str.ToMyString(building.production) + ")";
                 
                 transform.Find("resources/"+res+"/res_prod").GetComponent<TMPro.TextMeshProUGUI>().text = s;
 

@@ -31,9 +31,9 @@ public class PlayerUIHandler : MonoBehaviour {
         string[] resources = {"food","wood","stone","gold"};
         foreach (string resource in resources)
         {
-            castleData.transform.Find(resource).Find("qty").GetComponent<TMPro.TextMeshProUGUI>().text = ToMyString(res.getQty(resource));
+            castleData.transform.Find(resource).Find("qty").GetComponent<TMPro.TextMeshProUGUI>().text = str.ToMyString(res.getQty(resource));
             int diff = res.getDiff(resource);
-            string diffstring = ToMyString(diff);
+            string diffstring = str.ToMyString(diff);
 
             if (diff > 0){
                 castleData.transform.Find(resource).Find("diff").GetComponent<TMPro.TextMeshProUGUI>().color = Color.green;
@@ -52,7 +52,16 @@ public class PlayerUIHandler : MonoBehaviour {
 
     }
 
-    public string ToMyString(int i){
+}
+
+public static class str{
+
+    public static string ToMyString(float f){
+        int i = Mathf.FloorToInt(f);
+        return ToMyString(i);
+    }
+
+    public static string ToMyString(int i){
 
         if (i < 0){
             return "-" + ToMyString(-i);
@@ -80,7 +89,7 @@ public class PlayerUIHandler : MonoBehaviour {
         return TMS(i,million*million*mille,"Q");
     }
 
-    private string TMS(int i,float sol=1000f,string letter="K"){
+    private static string TMS(int i,float sol=1000f,string letter="K"){
 
         // Debug.Log(i + " / " + sol + " = " + i/sol);
         float f = i/sol;

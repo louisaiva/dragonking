@@ -23,13 +23,13 @@ public class CastleGenerator : MonoBehaviour
     [SerializeField] private GameObject lumberjackFBX;
     private int lbj_nb = 0;
 
+
     // unity functions
 
     void Awake()
     {
         // materials
         matWall = Resources.Load("Materials/castles/walls_2", typeof(Material)) as Material;
-
     }
 
     // init function

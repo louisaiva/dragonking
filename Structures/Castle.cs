@@ -176,6 +176,9 @@ public class Castle : MonoBehaviour, I_Building
     // 
     private List<I_Building> buildings;
 
+    // beings
+    private List<Being> beings;
+
 
     // init
 
@@ -201,6 +204,17 @@ public class Castle : MonoBehaviour, I_Building
         // resources
         resources = new ResourcesHandler();
         resources.randomize();
+
+        // beings
+        int nb_beings = Mathf.RoundToInt(Random.Range(1, 10));
+        BeingGenerator beingGenerator = GameObject.Find("/world").GetComponent<BeingGenerator>();
+        beings = new List<Being>();
+        for (int i = 0; i < nb_beings; i++)
+        {
+            Being b = beingGenerator.GenerateRandBeing();
+            b.init();
+            beings.Add(b);
+        }
 
         // ui
         InitUI();
