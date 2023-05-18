@@ -12,7 +12,7 @@ public class RessourceUI : MonoBehaviour
     {
         this.building = building;
 
-        Debug.Log("init simple ui of " + building.GetName());
+        // Debug.Log("init simple ui of " + building.GetName());
 
         // set building name
         transform.Find("name").GetComponent<TMPro.TextMeshProUGUI>().text = building.GetName();

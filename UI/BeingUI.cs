@@ -12,7 +12,7 @@ public class BeingUI : MonoBehaviour
     {
         this.bein = bein;
 
-        Debug.Log("init simple ui of " + bein.GetName());
+        // Debug.Log("init simple ui of " + bein.GetName());
 
         // set building name
         transform.Find("name").GetComponent<TMPro.TextMeshProUGUI>().text = bein.GetName();
@@ -24,8 +24,9 @@ public class BeingUI : MonoBehaviour
         // 2 : class
         // 3 : race
         // 4 : origin
+        // 5 : reputation
 
-        string[] panels = new string[4] {"age","race","classe","origin"};
+        string[] panels = new string[] {"age","race","classe","origin","reputation"};
 
         int height_panel = 50;
 

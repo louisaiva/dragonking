@@ -18,17 +18,29 @@ public class Being : MonoBehaviour, I_HasUI
     public string classe;
 
 
+    // social net
+    private SocialNet socialNet;
+
     // ui
     public GameObject ui {get; set;}
 
 
     // unity functions
 
-    public void init(){
+    public void init(SocialNet socialNet){
+
+        // social net
+        this.socialNet = socialNet;
 
         // init ui
         InitUI();
-        Debug.Log("init" + name);
+
+    }
+
+    public void Update(){
+        
+
+
     }
 
     // getters
@@ -53,6 +65,10 @@ public class Being : MonoBehaviour, I_HasUI
         return classe;
     }
 
+    public int GetReputation(){
+        return Mathf.FloorToInt(socialNet.GetReputation(this));
+    }
+
     public string Get(string cat){
 
         switch (cat)
@@ -67,6 +83,9 @@ public class Being : MonoBehaviour, I_HasUI
                 return origin;
             case "classe":
                 return classe;
+            case "reputation":
+                // Debug.Log("get reputation of " + name);
+                return Mathf.FloorToInt(socialNet.GetReputation(this)).ToString();
         }
         return "/";
 

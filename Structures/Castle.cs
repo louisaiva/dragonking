@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using static System.Array;
 
 public struct ResourcesHandler
 {
@@ -157,6 +158,8 @@ public class Castle : MonoBehaviour, I_Building
 
     public GameObject ui { get; set; }
 
+    // castle
+    [ReadOnly,SerializeField] private string country;
 
     // resources
     private ResourcesHandler resources;
@@ -179,6 +182,8 @@ public class Castle : MonoBehaviour, I_Building
     // beings
     private List<Being> beings;
 
+    // social net
+    [ReadOnly,SerializeField] private GameObject socialNet;
 
     // init
 
@@ -206,15 +211,25 @@ public class Castle : MonoBehaviour, I_Building
         resources.randomize();
 
         // beings
-        int nb_beings = Mathf.RoundToInt(Random.Range(1, 10));
+        int nb_beings = 8;
         BeingGenerator beingGenerator = GameObject.Find("/world").GetComponent<BeingGenerator>();
+        this.country = beingGenerator.GetRandomOrigin();
         beings = new List<Being>();
         for (int i = 0; i < nb_beings; i++)
         {
-            Being b = beingGenerator.GenerateRandBeing();
-            b.init();
-            beings.Add(b);
+            GameObject g = beingGenerator.GenerateRandPersoFromOrigin(this.country);
+
+            // set the parent
+            g.transform.parent = transform;
+
+            // set the position
+            g.transform.localPosition = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f));
+
+            beings.Add(g.GetComponent<Being>());
         }
+
+        // social net
+        socialNet = GameObject.Find("/socialNet");
 
         // ui
         InitUI();
@@ -222,7 +237,7 @@ public class Castle : MonoBehaviour, I_Building
 
     public void Update()
     {
-        //UpdateUI();
+        UpdateUI();
 
         HandleInteraction();
 
@@ -234,6 +249,9 @@ public class Castle : MonoBehaviour, I_Building
         stoneVisu = resources.getQty("stone");
         ironVisu = resources.getQty("iron");
         goldVisu = resources.getQty("gold");
+
+        // simulate interactions between beings
+        socialNet.GetComponent<SocialNet>().simulate(beings);
 
     }
 
@@ -310,7 +328,7 @@ public class Castle : MonoBehaviour, I_Building
 
     public void UpdateUI()
     {
-        throw new System.NotImplementedException();
+        ui.GetComponent<CastleUI>().update();
     }
 
     void InitUI()
@@ -341,6 +359,34 @@ public class Castle : MonoBehaviour, I_Building
     public int GetCurrentLife()
     {
         return currentLife;
+    }
+
+    public Being GetRandomBeing()
+    {
+        return beings[Random.Range(0, beings.Count)];
+    }
+
+    public List<Being> GetBeings()
+    {
+        SortBeingsByClasse();
+        return beings;
+    }
+
+    private void SortBeingsByClasse()
+    {
+        /* string[] classes = new string[] {"military","craftsman","scholar","artist","laborer","religious","merchant","aristocracy"};
+
+        // sort the beings by classe
+        beings.Sort((x, y) => System.Array.IndexOf(classes,x.GetClasse()).CompareTo(System.Array.IndexOf(classes,y.GetClasse()))); */
+
+        // sort the beings by classe
+        beings.Sort((x, y) => x.GetClasse().CompareTo(y.GetClasse()));
+
+    }
+
+    public string GetCountry()
+    {
+        return country;
     }
 
     // setters
