@@ -9,6 +9,8 @@ public class SocialNet : MonoBehaviour {
     private Dictionary<Being, Dictionary<Being,float>> relationships;
     private Dictionary<Being, float> reputation;
 
+    private Being max_reputation_being;
+
     // unity functions
 
     public void Start()
@@ -24,29 +26,53 @@ public class SocialNet : MonoBehaviour {
 
     public void simulate(List<Being> beings){
 
-        // simulate the social net of the beings
-        // get called each tick of the game
-
-        // choose 2 random beings
-        Being giver = beings[Random.Range(0,beings.Count)];
-        Being recever = beings[Random.Range(0,beings.Count)];
-
-        // init interaction with the other being
-        InitInteraction(giver, recever);
-
-
-        // calculate the gift based on the relationship
-        float gift = relationships[giver][recever] * Random.Range(0.01f, 0.1f);
-
-        if (Mathf.Abs(gift) < 0.01f)
+        int nb_rounds = 1000;
+        for (int i=0; i<nb_rounds; i++)
         {
-            gift = Random.Range(-1f,1f);
+            // simulate the social net of the beings
+            // get called each tick of the game
+
+            // choose 2 random beings
+            Being giver = beings[Random.Range(0,beings.Count)];
+            Being receiver = beings[Random.Range(0,beings.Count)];
+
+            // init interaction with the other being
+            InitInteraction(giver, receiver);
+
+
+            // calculate the gift based on the relationship
+            float gift = relationships[giver][receiver] * Random.Range(0.01f, 0.1f);
+
+            if (Mathf.Abs(gift) < 0.01f)
+            {
+                gift = Random.Range(-1f,1f);
+            }
+
+            // if the beings are not the same
+            if (giver != receiver)
+            {
+                OneWayInteraction(giver, receiver, gift);
+            }
         }
 
-        // if the beings are not the same
-        if (giver != recever)
+        // major reputation shock
+        if (Random.Range(0, 500) < 1)
         {
-            OneWayInteraction(giver, recever, gift);
+            // choose a random being
+            Being receiver = beings[Random.Range(0, beings.Count)];
+            
+            // choose a big gift
+            float gift = 1000f * Mathf.Sign(Random.Range(-1f,1f));
+            Debug.Log("WHA : " + receiver.GetName() + " " + gift);
+            
+            for (int i=0; i<beings.Count; i++)
+            {
+                Being giver = beings[i];
+                if (receiver != giver)
+                {
+                    OneWayInteraction(giver, receiver, gift);
+                }
+            }
         }
 
     }
@@ -60,32 +86,35 @@ public class SocialNet : MonoBehaviour {
         }
     }
 
-    public void InitInteraction(Being recever, Being giver){
-        AddBeing(recever);
-        if (!relationships[recever].ContainsKey(giver))
+    public void InitInteraction(Being receiver, Being giver){
+        AddBeing(receiver);
+        if (!relationships[receiver].ContainsKey(giver))
         {
-            relationships[recever].Add(giver, 0);
+            relationships[receiver].Add(giver, 0);
         }
 
         AddBeing(giver);
-        if (!relationships[giver].ContainsKey(recever))
+        if (!relationships[giver].ContainsKey(receiver))
         {
-            relationships[giver].Add(recever, 0);
+            relationships[giver].Add(receiver, 0);
         }
     }
 
-    public void OneWayInteraction(Being recever, Being giver, float gift){
+    public void OneWayInteraction(Being receiver, Being giver, float gift){
 
         // GIVER interact with RECEVER. Only RECEVER is affected by the interaction
-        // ex : giver give something to recever -> recever received +1 love regarding giver
+        // ex : giver give something to receiver -> receiver received +1 love regarding giver
 
-        // ex2: giver fait un coup batard à recever -> recever received -1 love regarding giver
+        // ex2: giver fait un coup batard à receiver -> receiver received -1 love regarding giver
 
         // add the being if they are not in the social net
-        InitInteraction(recever, giver);
+        InitInteraction(receiver, giver);
 
         // add the relationship
-        relationships[recever][giver] += gift;
+        relationships[receiver][giver] += gift;
+
+        // normalize the relationship
+        relationships[receiver][giver] = NormalizeComparingMaxReputation(relationships[receiver][giver]);
 
         // calculate reputation
         CalculateReputation(giver);
@@ -135,9 +164,31 @@ public class SocialNet : MonoBehaviour {
         if (count > 0)
         {
             reputation[being] = totalReputation / count;
+            if (max_reputation_being == null || reputation[being] > reputation[max_reputation_being])
+            {
+                max_reputation_being = being;
+            }
         }
     }
 
+    // usefull functions
+
+    private float NormalizeComparingMaxReputation(float love){
+        // Normalize the love between -100 and 100
+        // based on the max reputation being
+
+        if (max_reputation_being == null)
+        {
+            return love;
+        }
+
+        float max_reputation = GetReputation(max_reputation_being);
+
+        bool negative = (love < 0);
+        love = (Mathf.Abs(love)/max_reputation) * 100;
+
+        return love*(negative ? -1 : 1);
+    }
 
     // getters
 
