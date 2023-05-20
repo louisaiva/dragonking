@@ -236,7 +236,7 @@ public class Castle : MonoBehaviour, I_Building
     public void CreateBuildings()
     {
         Dictionary<string, string> build_classe = new Dictionary<string, string>() {
-            {"military","bakery"},
+            {"military","military_house"},
             {"craftsman","lumberjack"},
             {"scholar","bakery"},
             {"artist","bakery"},
