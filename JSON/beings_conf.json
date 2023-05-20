@@ -9,6 +9,8 @@
 
         "classes":["military","craftsman","scholar","artist","laborer","religious","merchant","aristocracy"],
 
+        "classes_prop":[20,25,5,5,30,5,5,5],
+
         "races":["human","elf","dwarf","orc","goblin","halfling","gnome","troll","ogre","giant","dragon","demon"
             ,"angel","fairy","undead","beast","elemental","construct","plant","aberration","outsider","fey",
             "ooze","vermin","shapechanger","humanoid"],

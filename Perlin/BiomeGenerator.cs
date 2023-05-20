@@ -492,6 +492,9 @@ public class BiomeGenerator : MonoBehaviour
         data.height = GetFinalHeight(param);
         data.biome = GetBiome(param);
 
+        data.temperature = param.z;
+        data.rainfall = param.y;
+
         // generate trees,rocks,etc... based on biome
         data.elements = GenerateHexElements(data.biome);
 

@@ -84,6 +84,9 @@ public struct HexData
     public string biome;
     public float height;
 
+    public float temperature;
+    public float rainfall;
+
     // resource
     public Dictionary<string, float> resources;
 
@@ -107,6 +110,19 @@ public struct HexData
                 resources.Add(res, prod);
             }
         }
+
+        // food production
+        resources.Add("food", 0.0f);
+        if (temperature > 0.2f && temperature < 0.8f && rainfall > 0.2f && rainfall < 0.8f){
+            resources["food"] += 1f;
+        }
+        if (temperature > 0.4f && temperature < 0.6f && rainfall > 0.4f && rainfall < 0.6f){
+            resources["food"] += 2f;
+        }
+        if (temperature > 0.45f && temperature < 0.55f && rainfall > 0.45f && rainfall < 0.55f){
+            resources["food"] += 2f;
+        }
+
     }
 
     public (List<string>,List<float>) getResourceTuple(){
@@ -618,4 +634,31 @@ public class ChunkHandler : MonoBehaviour
         }
         return result;
     }
+
+    public Vector2Int GetRandomHexCoordInRange(Vector2Int coord,int range){
+
+        List<Hex> hexes = GetHexesInRange(coord,range);
+        return hexes[Random.Range(0,hexes.Count)].GetGlobalCoord();
+
+    }
+
+    public Vector2Int GetRandomEarthCoordInRange(Vector2Int coord,int range){
+
+        List<Hex> hexes = GetHexesInRange(coord,range);
+        List<Hex> earth_hexes = new List<Hex>();
+
+        foreach (Hex hex in hexes){
+            if (hex.biome != "sea"){
+                earth_hexes.Add(hex);
+            }
+        }
+
+        if (earth_hexes.Count <= 0){
+            Debug.Log("no earth left");
+            return new Vector2Int(-1,-1);
+        }
+
+        return earth_hexes[Random.Range(0,earth_hexes.Count)].GetGlobalCoord();
+    }
+
 }

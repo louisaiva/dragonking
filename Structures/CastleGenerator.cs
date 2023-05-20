@@ -21,7 +21,9 @@ public class CastleGenerator : MonoBehaviour
 
     [Header("Buildings")]
     [SerializeField] private GameObject lumberjackFBX;
-    private int lbj_nb = 0;
+    [SerializeField] private GameObject fieldFBX;
+
+    private Dictionary<string,int> nb_buildings = new Dictionary<string, int>();
 
 
     // unity functions
@@ -50,8 +52,13 @@ public class CastleGenerator : MonoBehaviour
             player.GetComponent<PlayerUIHandler>().SetCastle(castles[0]);
 
 
+        foreach (Castle castle in castles)
+        {
+            castle.CreateBeingsAndBuildings();
+        }
+
         // generate buildings
-        GenerateBuildings(nombreCastles);
+        // GenerateBuildings(nombreCastles);
     }
 
     public void RegenerateCastles(){
@@ -100,7 +107,7 @@ public class CastleGenerator : MonoBehaviour
 
         // apply to hex data
         GetComponent<ChunkHandler>().SetElementToTile(pos,castle);
-        HexData data = GetComponent<ChunkHandler>().GetTileData(pos);
+        // HexData data = GetComponent<ChunkHandler>().GetTileData(pos);
 
     }
 
@@ -108,12 +115,43 @@ public class CastleGenerator : MonoBehaviour
     {
         GameObject building = Instantiate(lumberjackFBX);
         building.AddComponent<Lumberjack>();
-        building.name = "lumberjack " + (lbj_nb).ToString();
-        lbj_nb++;
-        building.AddComponent<MeshCollider>();
-        
+
+        // building ID
+        building.name = "lumberjack" + " " + (nb_buildings.ContainsKey("lumberjack") ? nb_buildings["lumberjack"] : 0).ToString();
+        if (nb_buildings.ContainsKey("lumberjack"))
+            nb_buildings["lumberjack"]++;
+        else
+            nb_buildings.Add("lumberjack",1);
         // random coord
         Vector2Int pos = GetComponent<ChunkHandler>().GetRandomEarthCoord();
+
+        // apply to hex data
+        GetComponent<ChunkHandler>().SetElementToTile(pos,building);
+    }
+
+    public void CreateBuildForCastle(string buildtype,Castle castle){
+
+        GameObject building = Instantiate(Resources.Load("Prefabs/structures/"+buildtype)) as GameObject;
+
+        // building ID
+        building.name = buildtype + " " + (nb_buildings.ContainsKey(buildtype) ? nb_buildings[buildtype] : 0).ToString();
+        if (nb_buildings.ContainsKey(buildtype))
+            nb_buildings[buildtype]++;
+        else
+            nb_buildings.Add(buildtype,1);
+
+        Debug.Log("building "+buildtype+" lookin for coord with radius "+castle.GetRadius()+" around "+castle.GetHex().GetGlobalCoord()+"...");
+
+        // random coord around castle
+        Vector2Int pos = GetComponent<ChunkHandler>().GetRandomEarthCoordInRange(castle.GetHex().GetGlobalCoord(),castle.GetRadius());
+
+
+        if (pos.x == -1){
+            Debug.Log("no coord found");
+            return;
+        }
+
+        Debug.Log("building "+buildtype+" got coord "+pos);
 
         // apply to hex data
         GetComponent<ChunkHandler>().SetElementToTile(pos,building);

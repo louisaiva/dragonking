@@ -145,9 +145,11 @@ public class Castle : MonoBehaviour, I_Building
 {
 
     // castle
-
+    [Header("Castle")]
     [ReadOnly,SerializeField] private string castleName;
     [ReadOnly,SerializeField] private Color color;
+    [ReadOnly] public string country;
+    [ReadOnly,SerializeField] private int radius = 10;
 
     // life
 
@@ -159,9 +161,9 @@ public class Castle : MonoBehaviour, I_Building
     public GameObject ui { get; set; }
 
     // castle
-    [ReadOnly,SerializeField] private string country;
 
     // resources
+    [Header("Resources")]
     private ResourcesHandler resources;
     [ReadOnly,SerializeField] private int foodVisu;
     [ReadOnly,SerializeField] private int woodVisu;
@@ -184,6 +186,7 @@ public class Castle : MonoBehaviour, I_Building
 
     // social net
     [ReadOnly,SerializeField] private GameObject socialNet;
+    [ReadOnly,SerializeField] private GameObject world;
 
     // init
 
@@ -191,6 +194,9 @@ public class Castle : MonoBehaviour, I_Building
     {
         this.castleName = name;
         this.color = color;
+
+        // world
+        world = GameObject.Find("/world");
 
         // set mat and the children "flag" color
         foreach (Transform child in transform)
@@ -210,30 +216,44 @@ public class Castle : MonoBehaviour, I_Building
         resources = new ResourcesHandler();
         resources.randomize();
 
-        // beings
-        int nb_beings = 8;
-        BeingGenerator beingGenerator = GameObject.Find("/world").GetComponent<BeingGenerator>();
-        this.country = beingGenerator.GetRandomOrigin();
-        beings = new List<Being>();
-        for (int i = 0; i < nb_beings; i++)
-        {
-            GameObject g = beingGenerator.GenerateRandPersoFromOrigin(this.country);
-
-            // set the parent
-            g.transform.parent = transform;
-
-            // set the position
-            g.transform.localPosition = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f));
-
-            beings.Add(g.GetComponent<Being>());
-        }
-
         // social net
         socialNet = GameObject.Find("/socialNet");
 
         // ui
         InitUI();
     }
+
+    public void CreateBeingsAndBuildings()
+    {
+        int nb_beings = 8;
+        BeingGenerator beingGenerator = world.GetComponent<BeingGenerator>();
+        this.country = beingGenerator.GetRandomOrigin();
+        beings = beingGenerator.GenerateCastlePopulation(this, nb_beings);
+
+        CreateBuildings();
+    }
+
+    public void CreateBuildings()
+    {
+        Dictionary<string, string> build_classe = new Dictionary<string, string>() {
+            {"military","bakery"},
+            {"craftsman","lumberjack"},
+            {"scholar","bakery"},
+            {"artist","bakery"},
+            {"laborer","wheatfield"},
+            {"religious","bakery"},
+            {"merchant","bakery"},
+            {"aristocracy","bakery"}
+        };
+
+        foreach (Being being in beings)
+        {
+            string buildtype = build_classe[being.GetClasse()];
+            CreateBuilding(buildtype);
+        }
+    }
+
+    // unity functions
 
     public void Update()
     {
@@ -301,6 +321,9 @@ public class Castle : MonoBehaviour, I_Building
         return castleName;
     }
 
+    public void CreateBuilding(string buildtype){
+        world.GetComponent<CastleGenerator>().CreateBuildForCastle(buildtype, this);
+    }
 
     // interaction
 
@@ -345,6 +368,11 @@ public class Castle : MonoBehaviour, I_Building
     }
 
     // getters
+
+    public int GetRadius()
+    {
+        return radius;
+    }
 
     public Color GetColor()
     {
