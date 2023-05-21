@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Lumberjack : MonoBehaviour, I_Building
+public class Building : MonoBehaviour, I_Building
 {
     // building
     [SerializeField] public string resource { get; set;}
@@ -21,9 +21,7 @@ public class Lumberjack : MonoBehaviour, I_Building
     void Start()
     {
         // init building
-        resource = "wood";
-        production = 0f;
-        range = 4;
+        init();
 
         // init inventory
         inventory = new Dictionary<string, float>();
@@ -33,9 +31,14 @@ public class Lumberjack : MonoBehaviour, I_Building
         InitUI();
     }
 
+    public virtual void init(){
+        // init building
+        resource = "none";
+        production = 0f;
+    }
+
     void Update()
     {
-        UpdateProduction();
         Produce();
     }
  
@@ -75,19 +78,8 @@ public class Lumberjack : MonoBehaviour, I_Building
 
     // methods
 
-    public void UpdateProduction()
-    {
-        // init
-        production = 0f;
-
-        // get the list of all hexs in range
-        List<Hex> hexsInRange = GetHex().GetChunk().GetHexHandler().GetHexesInRange(GetHex().GetGlobalCoord(), range);
-        for (int i = 0; i < hexsInRange.Count; i++)
-        {
-            HexData data = hexsInRange[i].GetData();
-            production += data.getResourceProduction(resource);
-        }
-        // Debug.Log("production: " + production);
+    public virtual void UpdateProduction(){
+        production = GetHex().GetData().getResourceProduction(resource);
     }
 
     public void Produce()
@@ -115,9 +107,9 @@ public class Lumberjack : MonoBehaviour, I_Building
         return inventory;
     }
 
-    public string GetName()
+    public virtual string GetName()
     {
-        return "Lumberjack";
+        return "Building";
     }
 
     // hoover

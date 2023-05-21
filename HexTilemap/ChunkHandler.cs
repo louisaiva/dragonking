@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public struct WorldData
 {
     public int castlesCount;
@@ -101,8 +102,9 @@ public struct HexData
             string res;
             float prod;
 
-            string element = conf.getElementFromFBXName(go.name);
+            string element = conf.getElementFromGOName(go.name);
             (res, prod) = conf.getResourceFromElement(element);
+            Debug.Log(go.name + " -> element : "+element+" | res : "+res+" | prod : "+prod);
 
             if (resources.ContainsKey(res)){
                 resources[res] += prod;
@@ -144,6 +146,62 @@ public struct HexData
         } else {
             return 0;
         }
+    }
+
+    public bool isEmpty(Configuration conf){
+        if (elements.Count == 0){
+            return true;
+        }
+
+        // check if there is only construct elements such as rocks, trees, ...
+        List<string> constructElements = conf.getConstructElements();
+
+        foreach (GameObject go in elements)
+        {
+            bool isConstructElement = false;
+            foreach (string element in constructElements)
+            {
+                if (go.name.Contains(element)){
+                    isConstructElement = true;
+                    break;
+                }
+            }
+
+            // if there is an element that is not a construct element, then the hex is not empty
+            if (!isConstructElement){
+                return false;
+            }
+        }
+
+        // if all elements are construct elements, then the hex is empty
+        return true;
+    }
+
+    public bool hasOnly(List<string> constructElements){
+        if (elements.Count == 0){
+            return true;
+        }
+
+        // check if there is only construct elements such as rocks, trees, ...
+        foreach (GameObject go in elements)
+        {
+            bool isConstructElement = false;
+            foreach (string element in constructElements)
+            {
+                if (go.name.Contains(element)){
+                    isConstructElement = true;
+                    break;
+                }
+            }
+
+            // if there is an element that is not a construct element, then the hex is not empty
+            if (!isConstructElement){
+                return false;
+            }
+        }
+
+        // if all elements are construct elements, then the hex is empty
+        return true;
     }
 }
 
@@ -659,6 +717,52 @@ public class ChunkHandler : MonoBehaviour
         }
 
         return earth_hexes[Random.Range(0,earth_hexes.Count)].GetGlobalCoord();
+    }
+
+    // EMPLACEMENT FINDER
+
+    public Vector2Int FindEmptyEarthCoordInRange(Vector2Int coord,int range){
+
+        
+        // recursive version : pour resserer le range comme ça les batiments sont plus proches les uns des autres
+        // todo : pas optimisé au max, on pourrait faire un algo qui cherche le plus proche en partant de coord
+        for (int i = 0; i < range; i++)
+        {
+            Vector2Int result = this.FindEmptyEarthCoordInRange(coord,i);
+            if (result.x != -1){
+                return result;
+            }
+        }
+
+        // récupère tous les hexagones dans le range
+        List<Hex> hexes = GetHexesInRange(coord,range);
+        List<Hex> earth_hexes = new List<Hex>();
+
+        // récupère tous les hexagones qui ne sont pas de l'eau
+        foreach (Hex hex in hexes){
+            if (hex.biome != "sea"){
+                earth_hexes.Add(hex);
+            }
+        }
+
+        // si il y a que de l'eau, on renvoie -1,-1
+        if (earth_hexes.Count <= 0){
+            Debug.Log("no earth left");
+            return new Vector2Int(-1,-1);
+        }
+
+        // get the constructs elements (rock, tree, etc...)
+        List<string> constructElements = gameObject.GetComponent<BiomeGenerator>().GetConf().getConstructElements();
+        
+        // and check if there is at least one empty hex (empty means empty or with only construct elements)
+        foreach (Hex hex in earth_hexes){
+            HexData data = hex.GetData();
+            if (data.hasOnly(constructElements)){
+                return hex.GetGlobalCoord();
+            }
+        }
+
+        return new Vector2Int(-1,-1);
     }
 
 }

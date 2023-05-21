@@ -66,11 +66,9 @@ public struct Configuration{
         materials2 = new Dictionary<string, Material>();
     }
 
-    public string getElementFromFBXName(string name){
-        foreach (KeyValuePair<string,List<string>> entry in elements){
-            if (entry.Value.Contains(name)){
-                return entry.Key;
-            }
+    public string getElementFromGOName(string name){
+        if (elements.ContainsKey(name)){
+            return name;
         }
         return "";
         
@@ -85,6 +83,11 @@ public struct Configuration{
             }
         }
         return ("",0f);
+    }
+
+    public List<string> getConstructElements(){
+        List<string> l = elements.Keys.ToList();
+        return l;
     }
 
 }
@@ -526,7 +529,7 @@ public class BiomeGenerator : MonoBehaviour
 
                     // create element
                     GameObject obj = Instantiate(Resources.Load("fbx/" + fbx_name)) as GameObject;
-                    obj.name = fbx_name;
+                    obj.name = element;// + "_" + i;
                     obj.transform.localPosition = new Vector3(x, z, 1);
 
                     // add to list

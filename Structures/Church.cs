@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MilitaryHouse : Building
+public class Church : Building
 {
     // ui
     public GameObject ui { get; set; }
@@ -13,13 +13,13 @@ public class MilitaryHouse : Building
     public override void init()
     {
         // init building
-        resource = "soldier";
+        resource = "foy";
         production = 1f;
     }
 
     public override string GetName()
     {
-        return "MilitaryHouse";
+        return "Church";
     }
 
 }

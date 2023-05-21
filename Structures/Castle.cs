@@ -149,7 +149,7 @@ public class Castle : MonoBehaviour, I_Building
     [ReadOnly,SerializeField] private string castleName;
     [ReadOnly,SerializeField] private Color color;
     [ReadOnly] public string country;
-    [ReadOnly,SerializeField] private int radius = 10;
+    [ReadOnly,SerializeField] private int radius = 5;
 
     // life
 
@@ -238,10 +238,10 @@ public class Castle : MonoBehaviour, I_Building
         Dictionary<string, string> build_classe = new Dictionary<string, string>() {
             {"military","military_house"},
             {"craftsman","lumberjack"},
-            {"scholar","bakery"},
-            {"artist","bakery"},
+            {"scholar","school"},
+            {"artist","artist_house"},
             {"laborer","wheatfield"},
-            {"religious","bakery"},
+            {"religious","church"},
             {"merchant","bakery"},
             {"aristocracy","bakery"}
         };

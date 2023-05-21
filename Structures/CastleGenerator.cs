@@ -140,18 +140,22 @@ public class CastleGenerator : MonoBehaviour
         else
             nb_buildings.Add(buildtype,1);
 
-        Debug.Log("building "+buildtype+" lookin for coord with radius "+castle.GetRadius()+" around "+castle.GetHex().GetGlobalCoord()+"...");
+        // Debug.Log("building "+buildtype+" lookin for coord with radius "+castle.GetRadius()+" around "+castle.GetHex().GetGlobalCoord()+"...");
+
+        // rotate building randomly 60° vertically
+        building.transform.Rotate(0,Random.Range(0,6)*60,0);
 
         // random coord around castle
-        Vector2Int pos = GetComponent<ChunkHandler>().GetRandomEarthCoordInRange(castle.GetHex().GetGlobalCoord(),castle.GetRadius());
+        Vector2Int pos = GetComponent<ChunkHandler>().FindEmptyEarthCoordInRange(castle.GetHex().GetGlobalCoord(),castle.GetRadius());
 
 
         if (pos.x == -1){
             Debug.Log("no coord found");
+            GameObject.Destroy(building);
             return;
         }
 
-        Debug.Log("building "+buildtype+" got coord "+pos);
+        // Debug.Log("building "+buildtype+" got coord "+pos);
 
         // apply to hex data
         GetComponent<ChunkHandler>().SetElementToTile(pos,building);
